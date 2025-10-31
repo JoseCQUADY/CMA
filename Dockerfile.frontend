@@ -1,0 +1,20 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copiar solo los archivos de dependencias de la carpeta CMA-FT a la raíz del WORKDIR
+COPY ./CMA-FT/package.json ./CMA-FT/package-lock.json ./
+
+RUN npm install
+
+# Copiar el resto del código de la carpeta CMA-FT a la raíz del WORKDIR
+COPY ./CMA-FT/ .
+
+EXPOSE 5173
+
+CMD ["npm", "run", "dev", "--", "--host"]
+
+
+
+
+

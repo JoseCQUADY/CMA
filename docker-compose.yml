@@ -1,62 +1,56 @@
 version: '3.8'
 
 services:
-  # Servicio de la Base de Datos PostgreSQL (sin cambios)
-  db:
-    image: postgres:15-alpine
-    container_name: bitacora_db
-    restart: always
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER} # Leído desde el archivo .env
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD} # Leído desde el archivo .env
-      POSTGRES_DB: ${POSTGRES_DB} # Leído desde el archivo .env
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    deploy:
-      resources:
-        limits:
-          memory: '1G' # Límite máximo de 1 GB de RAM para la BD
-        reservations:
-          memory: '256M' # Reserva 256 MB de RAM para la BD
-
-  # Servicio de nuestra API
   api:
-    container_name: cma-api # Cambiado para consistencia
     build:
-      context: .
+      context: ./CMA-BC
       dockerfile: Dockerfile
-    restart: always
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     depends_on:
-      - db
+      - postgres
+    networks:
+      - red-web
     environment:
-      # Variables de entorno para la conexión a la BD (leídas desde .env)
       DATABASE_URL: ${DATABASE_URL}
-
-      # --- Variables de entorno para la conexión a OCI ---
-      OCI_CONFIG_PATH: /app/oci_config/config
-      OCI_PROFILE: DEFAULT
-
-      # Variables de tu aplicación (leídas desde .env)
+      JWT_SECRET: ${JWT_SECRET}
       OCI_NAMESPACE: ${OCI_NAMESPACE}
       OCI_BUCKET_NAME: ${OCI_BUCKET_NAME}
-
+      OCI_REGION: ${OCI_REGION}
     volumes:
-      # Mapea la carpeta .oci local a una carpeta dentro del contenedor en modo solo lectura (ro)
-      - ~/.oci:/app/oci_config:ro
+      - ./CMA-BC/src:/app/src
+      - ~/.oci:/root/.oci:ro
 
-    # --- Control de Recursos para la API ---
-    deploy:
-      resources:
-        limits:
-          cpus: '0.50'      # Límite máximo: 50% de un núcleo de CPU
-          memory: '512M'    # Límite máximo: 512 MB de RAM
-        reservations:
-          cpus: '0.10'      # Reserva garantizada: 10% de un núcleo de CPU
-          memory: '128M'    # Reserva garantizada: 128 MB de RAM
+  postgres:
+    image: postgres:15.3-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - red-web
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+    networks:
+      - red-web
+    environment:
+      - VITE_API_URL=${VITE_API_URL}
+    volumes:
+      # Montamos la carpeta completa del frontend para hot-reloading
+      - ./CMA-FT:/app
+
+networks:
+  red-web:
+    external: true
 
 volumes:
   postgres_data:
