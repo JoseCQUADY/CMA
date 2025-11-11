@@ -1,45 +1,58 @@
-# --- ETAPA 1: Builder ---
-# Usamos una imagen completa de Node.js para instalar dependencias.
-# 'AS builder' le da un nombre a esta etapa.
+# ---- Etapa 1: Builder ----
+# En esta etapa instalamos TODAS las dependencias (incluidas las de desarrollo)
+# y generamos los artefactos necesarios como el cliente de Prisma.
 FROM node:20-alpine AS builder
 
-# Establecemos el directorio de trabajo dentro del contenedor
 WORKDIR /usr/src/app
 
-# Copiamos primero package.json y package-lock.json
-# Esto aprovecha el caché de Docker. Si estos archivos no cambian,
-# Docker no volverá a ejecutar 'npm install'.
+# Copiamos los archivos de dependencias
 COPY package*.json ./
 
-# Instalamos solo las dependencias de producción
-RUN npm install --only=production
+# Instalamos TODAS las dependencias, incluidas las devDependencies para poder usar Prisma CLI
+RUN npm install
 
-# --- ETAPA 2: Runner ---
-# Ahora usamos una imagen súper ligera para la ejecución final.
+# Copiamos el resto del código, incluyendo el schema de Prisma
+COPY . .
+
+# Generamos el cliente de Prisma
+# Si no usas Prisma, puedes eliminar esta línea
+RUN npx prisma generate
+
+# ---- Etapa 2: Runner (Producción) ----
+# Esta es la imagen final, será mucho más ligera porque no contendrá
+# las devDependencies ni el código fuente completo que no sea necesario.
 FROM node:20-alpine AS runner
 
 WORKDIR /usr/src/app
 
-# Creamos un usuario no-root por seguridad.
-# -S: crea un usuario del sistema, -G: lo añade a un grupo.
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001 -G nodejs
+# El usuario 'node' ya existe en la imagen base con UID/GID 1000.
+# Nos aseguramos que el directorio de la app le pertenezca.
+# Esto soluciona los problemas de permisos con los volúmenes montados.
+RUN chown -R node:node /usr/src/app
 
-# Copiamos las dependencias instaladas desde la etapa 'builder'
-COPY --from=builder /usr/src/app/node_modules ./node_modules
+# Establecemos que los siguientes comandos se ejecuten como el usuario 'node'
+USER node
 
-# Copiamos el resto de nuestro código de la aplicación (src, prisma, etc.)
-COPY . .
+# Copiamos solo los archivos de dependencias de producción
+COPY --chown=node:node package*.json ./
 
-# El cliente de Prisma debe ser generado dentro del entorno final
-# porque puede depender de binarios del sistema operativo.
-RUN npx prisma generate
+# Instalamos SOLAMENTE las dependencias de producción para mantener la imagen ligera
+RUN npm install --only=production
 
-# Cambiamos al usuario no-root que creamos
-USER nodejs
+# Copiamos el código de la aplicación
+COPY --chown=node:node . .
 
-# Exponemos el puerto en el que correrá nuestra aplicación
+# --- COPIA DESDE LA ETAPA 'builder' ---
+# Copiamos el cliente de Prisma generado desde la etapa de 'builder'
+# Esto es crucial para que la aplicación de producción lo pueda usar.
+# Si no usas Prisma, puedes eliminar esta línea.
+COPY --chown=node:node --from=builder /usr/src/app/node_modules/.prisma ./node_modules/.prisma
+COPY --chown=node:node --from=builder /usr/src/app/node_modules/@prisma ./node_modules/@prisma
+
+
+# Exponemos el puerto que usa nuestra aplicación
 EXPOSE 3000
 
-# El comando que se ejecutará cuando el contenedor inicie
-CMD [ "node", "src/server.js" ]
+# El comando para iniciar la aplicación en producción
+# Asegúrate de que 'src/index.js' sea tu punto de entrada principal
+CMD [ "sh", "-c", "sleep 2 && node src/server.js" ]

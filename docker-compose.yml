@@ -8,29 +8,35 @@ services:
     expose:
       - "3000"
     depends_on:
-      - postgres
+      - db
     networks:
       - red-web
     environment:
       DATABASE_URL: ${DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET}
+      # --- Variables de entorno para la conexión a OCI ---
+      OCI_CONFIG_PATH: /app/oci_config/config
+      OCI_PROFILE: DEFAULT 
+      # Variables de tu aplicación (leídas desde .env)
       OCI_NAMESPACE: ${OCI_NAMESPACE}
       OCI_BUCKET_NAME: ${OCI_BUCKET_NAME}
       OCI_REGION: ${OCI_REGION}
     volumes:
-      - ./CMA-BC/src:/app/src
-      - ~/.oci:/root/.oci:ro
+      - ./CMA-BC/src:/app/src:z
+      - ${HOME}/.oci:/app/oci_config:ro,z
 
-  postgres:
+  db:
     image: postgres:15.3-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - red-web
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: CMA
+      POSTGRES_USER: pool
+      POSTGRES_PASSWORD: oEvD0gyRJ4HceUwWBCwV
+    ports:
+      - "5432:5432"
 
   frontend:
     build:
@@ -46,7 +52,8 @@ services:
       - VITE_API_URL=${VITE_API_URL}
     volumes:
       # Montamos la carpeta completa del frontend para hot-reloading
-      - ./CMA-FT:/app
+      - ./CMA-FT:/app:z
+      - /app/node_modules
 
 networks:
   red-web:
