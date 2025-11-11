@@ -4,7 +4,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { mantenimientoSchema } from '../schemas/mantenimiento.schema';
 import { 
     Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, Box, 
-    Typography, IconButton, CircularProgress, Divider, Paper, InputAdornment, Stack 
+    Typography, IconButton, CircularProgress, Divider, Paper, InputAdornment, Stack, Tooltip
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import React from 'react';
