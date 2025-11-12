@@ -62,11 +62,11 @@ const UsuarioForm = ({ open, onClose, onSave, usuario, isSubmitting }) => {
                         helperText={errors.email?.message}
                         disabled={isSubmitting}
                     />
-                    <TextField
+                     <TextField
                         {...register('password')}
                         label="Contraseña"
                         type="password"
-                        helperText={usuario ? 'Dejar en blanco para no cambiar' : errors.password?.message}
+                        helperText={usuario ? errors.password?.message || 'Dejar en blanco para no cambiar' : errors.password?.message}
                         fullWidth
                         margin="dense"
                         required={!usuario}
