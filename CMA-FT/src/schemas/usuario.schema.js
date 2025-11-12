@@ -22,6 +22,12 @@ export const updateUserSchema = yup.object().shape({
     email: yup.string()
         .email('Debe ser un correo electrónico válido.')
         .required('El correo electrónico es requerido.'),
+    password: yup.string()
+        .test(
+            'is-valid-password',
+            'La contraseña debe tener al menos 6 caracteres',
+            (value) => !value || value.length >= 6
+        ),
     rol: yup.string()
         .oneOf(['ADMIN', 'TECNICO'], 'El rol no es válido.')
         .required('El rol es requerido.'),
