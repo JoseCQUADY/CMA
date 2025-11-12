@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link as RouterLink } from 'react-router-dom';
 import { getEquipoById } from '../services/equipo.service.js';
-import { 
-    Container, Typography, Box, Paper, Grid, CircularProgress, 
+import {
+    Container, Typography, Box, Paper, Grid, CircularProgress,
     Button, Link, Fade
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
@@ -84,26 +84,28 @@ const EquipoDetailPage = () => {
                 </Paper>
             </Fade>
 
-            <Fade in={!loading} timeout={800}>
-                <Paper sx={{ p: 3, mt: 3, borderRadius: 3 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        <ArticleIcon color="primary" sx={{ mr: 1.5 }} />
-                        <Typography variant="h6" component="h2">Manual de Usuario</Typography>
-                    </Box>
-                    {equipo.urlSeguraPDF ? (
-                         <Box>
-                            <Typography variant="body1" sx={{mb: 2, color: 'text.secondary' }}>{equipo.descripcionPDF || 'Manual principal del equipo.'}</Typography>
-                            <Button 
-                                variant="contained" 
-                                color="secondary" 
-                                onClick={() => handleOpenFile(equipo.urlSeguraPDF, `Manual: ${equipo.nombre}`)}
-                            >
-                                Ver Manual (PDF)
-                            </Button>
-                         </Box>
-                    ) : <Typography>No hay manual disponible para este equipo.</Typography>}
-                </Paper>
-            </Fade>
+            {user && user.role !== 'ADMIN' && (
+                <Fade in={!loading} timeout={800}>
+                    <Paper sx={{ p: 3, mt: 3, borderRadius: 3 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                            <ArticleIcon color="primary" sx={{ mr: 1.5 }} />
+                            <Typography variant="h6" component="h2">Manual de Usuario</Typography>
+                        </Box>
+                        {equipo.urlSeguraPDF ? (
+                            <Box>
+                                <Typography variant="body1" sx={{ mb: 2, color: 'text.secondary' }}>{equipo.descripcionPDF || 'Manual principal del equipo.'}</Typography>
+                                <Button
+                                    variant="contained"
+                                    color="secondary"
+                                    onClick={() => handleOpenFile(equipo.urlSeguraPDF, `Manual: ${equipo.nombre}`)}
+                                >
+                                    Ver Manual (PDF)
+                                </Button>
+                            </Box>
+                        ) : <Typography>No hay manual disponible para este equipo.</Typography>}
+                    </Paper>
+                </Fade>
+            )}
 
             <Fade in={!loading} timeout={1100}>
                 <Paper sx={{ p: 3, mt: 3, borderRadius: 3 }}>
@@ -114,17 +116,17 @@ const EquipoDetailPage = () => {
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                         {user ? "Acceda al historial completo para ver, añadir o editar registros." : "A continuación se muestra un resumen. Inicie sesión para gestionar el historial."}
                     </Typography>
-                    <Button component={RouterLink} to={`/equipo/${id}/mantenimientos`} variant="contained" sx={{color: 'white'}}>
+                    <Button component={RouterLink} to={`/equipo/${id}/mantenimientos`} variant="contained" sx={{ color: 'white' }}>
                         {user ? 'Gestionar Historial Completo' : 'Ver Historial Completo'}
                     </Button>
                 </Paper>
             </Fade>
 
-            <FileViewerModal 
-                open={modalOpen} 
-                onClose={handleCloseModal} 
-                fileUrl={fileToView.url} 
-                title={fileToView.title} 
+            <FileViewerModal
+                open={modalOpen}
+                onClose={handleCloseModal}
+                fileUrl={fileToView.url}
+                title={fileToView.title}
             />
         </Container>
     );
