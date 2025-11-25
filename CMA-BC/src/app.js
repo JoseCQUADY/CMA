@@ -9,6 +9,7 @@ import authRoutes from './routes/auth.routes.js';
 import usuarioRoutes from './routes/usuario.routes.js';
 import equipoRoutes from './routes/equipo.routes.js';
 import mantenimientoRoutes from './routes/mantenimiento.routes.js';
+import statsRoutes from './routes/stats.routes.js';
 import { errorHandler } from './middlewares/errorHandler.middleware.js';
 import { prismaErrorHandler } from './middlewares/prismaErrorHandler.middleware.js';
 
@@ -55,6 +56,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/equipos', equipoRoutes);
 app.use('/api/mantenimientos', mantenimientoRoutes);
+app.use('/api/stats', statsRoutes);
 
 app.use(prismaErrorHandler);
 

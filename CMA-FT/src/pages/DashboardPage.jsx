@@ -6,7 +6,10 @@ import { useTheme } from '@mui/material/styles';
 import DevicesIcon from '@mui/icons-material/Devices';
 import PeopleIcon from '@mui/icons-material/People';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import BuildIcon from '@mui/icons-material/Build';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { getLocalStorage, setLocalStorage } from '../utils/cookie.js';
+import { getSystemStats } from '../services/stats.service.js';
 
 const DashboardCard = ({ title, description, link, icon, disabled = false, stats }) => {
     const theme = useTheme();
@@ -47,7 +50,7 @@ const DashboardCard = ({ title, description, link, icon, disabled = false, stats
                     <Avatar sx={{ bgcolor: 'primary.main', width: { xs: 48, sm: 56 }, height: { xs: 48, sm: 56 }, mr: 2 }}>
                         {icon}
                     </Avatar>
-                    {stats && (
+                    {stats !== undefined && (
                         <Box sx={{ ml: 'auto', textAlign: 'right' }}>
                             <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
                                 {stats}
@@ -71,7 +74,7 @@ const DashboardCard = ({ title, description, link, icon, disabled = false, stats
     );
 };
 
-const StatCard = ({ title, value, icon, color = 'primary.main' }) => (
+const StatCard = ({ title, value, icon, color = 'primary.main', loading = false }) => (
     <Paper 
         elevation={1} 
         sx={{ 
@@ -88,7 +91,7 @@ const StatCard = ({ title, value, icon, color = 'primary.main' }) => (
         </Avatar>
         <Box>
             <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                {value !== null ? value : <Skeleton width={40} />}
+                {loading ? <Skeleton width={40} /> : value}
             </Typography>
             <Typography variant="body2" color="text.secondary">
                 {title}
@@ -102,6 +105,8 @@ const DashboardPage = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const [lastVisit, setLastVisit] = useState(null);
+    const [stats, setStats] = useState(null);
+    const [loadingStats, setLoadingStats] = useState(true);
 
     useEffect(() => {
         // Track last visit using localStorage
@@ -110,6 +115,26 @@ const DashboardPage = () => {
             setLastVisit(new Date(storedLastVisit));
         }
         setLocalStorage('lastDashboardVisit', new Date().toISOString());
+        
+        // Fetch stats using AJAX + JSON
+        const fetchStats = async () => {
+            try {
+                const response = await getSystemStats();
+                setStats(response.data);
+                // Cache stats in localStorage
+                setLocalStorage('dashboardStats', response.data);
+            } catch {
+                // Load from cache if API fails
+                const cached = getLocalStorage('dashboardStats');
+                if (cached) {
+                    setStats(cached);
+                }
+            } finally {
+                setLoadingStats(false);
+            }
+        };
+        
+        fetchStats();
     }, []);
 
     return (
@@ -170,27 +195,48 @@ const DashboardPage = () => {
                 />
             </Box>
 
-            {/* Quick Stats for Admin */}
-            {user?.rol === 'ADMIN' && (
-                <Grid container spacing={2} sx={{ mb: 4 }}>
-                    <Grid item xs={6} md={3}>
-                        <StatCard 
-                            title="Sesión Activa" 
-                            value="✓" 
-                            icon={<TrendingUpIcon />}
-                            color="success.main"
-                        />
-                    </Grid>
-                    <Grid item xs={6} md={3}>
-                        <StatCard 
-                            title="Rol" 
-                            value={user?.rol} 
-                            icon={<PeopleIcon />}
-                            color="secondary.main"
-                        />
-                    </Grid>
+            {/* Quick Stats */}
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: 'text.secondary' }}>
+                Estadísticas del Sistema
+            </Typography>
+            <Grid container spacing={2} sx={{ mb: 4 }}>
+                <Grid item xs={6} md={3}>
+                    <StatCard 
+                        title="Equipos Activos" 
+                        value={stats?.equipos_activos ?? '-'} 
+                        icon={<DevicesIcon />}
+                        color="primary.main"
+                        loading={loadingStats}
+                    />
                 </Grid>
-            )}
+                <Grid item xs={6} md={3}>
+                    <StatCard 
+                        title="Usuarios Activos" 
+                        value={stats?.usuarios_activos ?? '-'} 
+                        icon={<PeopleIcon />}
+                        color="secondary.main"
+                        loading={loadingStats}
+                    />
+                </Grid>
+                <Grid item xs={6} md={3}>
+                    <StatCard 
+                        title="Mantenimientos (Mes)" 
+                        value={stats?.mantenimientos_mes ?? '-'} 
+                        icon={<BuildIcon />}
+                        color="success.main"
+                        loading={loadingStats}
+                    />
+                </Grid>
+                <Grid item xs={6} md={3}>
+                    <StatCard 
+                        title="Total Mantenimientos" 
+                        value={stats?.total_mantenimientos ?? '-'} 
+                        icon={<TrendingUpIcon />}
+                        color="info.main"
+                        loading={loadingStats}
+                    />
+                </Grid>
+            </Grid>
             
             {/* Main Navigation Cards */}
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: 'text.secondary' }}>
@@ -202,6 +248,7 @@ const DashboardPage = () => {
                     description="Ver, crear, editar y eliminar el inventario de equipos médicos."
                     link="/equipos"
                     icon={<DevicesIcon sx={{ fontSize: { xs: 28, sm: 32 }, color: 'white' }} />}
+                    stats={stats?.equipos_activos}
                 />
                 
                 <DashboardCard
@@ -210,6 +257,7 @@ const DashboardPage = () => {
                     link="/admin/usuarios"
                     icon={<PeopleIcon sx={{ fontSize: { xs: 28, sm: 32 }, color: 'white' }} />}
                     disabled={user?.rol !== 'ADMIN'}
+                    stats={stats?.usuarios_activos}
                 />
             </Grid>
 
