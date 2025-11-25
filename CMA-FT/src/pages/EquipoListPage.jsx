@@ -5,26 +5,29 @@ import EquipoForm from '../components/EquipoForm';
 import ConfirmationDialog from '../components/ConfirmationDialog';
 import TableSkeleton from '../components/TableSkeleton';
 import { 
-    Container, Typography, Box, Paper, TableContainer, Table, TableHead,
+    Box, Typography, Paper, TableContainer, Table, TableHead,
     TableRow, TableCell, TableBody, TablePagination, Button, IconButton,
-    Backdrop, Tooltip, Fade, TextField, InputAdornment, CircularProgress
+    Backdrop, Tooltip, Fade, TextField, InputAdornment, CircularProgress, Chip
 } from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import InboxOutlinedIcon from '@mui/icons-material/InboxOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import PrintIcon from '@mui/icons-material/Print';
+import DevicesIcon from '@mui/icons-material/Devices';
 import toast from 'react-hot-toast';
 import React from 'react';
 
 const EquipoListPage = () => {
+    const theme = useTheme();
     const [equipos, setEquipos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalEquipos, setTotalEquipos] = useState(0);
     const [formOpen, setFormOpen] = useState(false);
     const [equipoToEdit, setEquipoToEdit] = useState(null);
@@ -220,74 +223,109 @@ const EquipoListPage = () => {
     };
 
     return (
-        <Container maxWidth="lg" className="print-container">
-            <Backdrop sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }} open={isSubmitting}>
+        <Box sx={{ maxWidth: 'lg', mx: 'auto' }} className="print-container">
+            <Backdrop sx={{ color: '#fff', zIndex: (th) => th.zIndex.drawer + 1 }} open={isSubmitting}>
                 <CircularProgress color="inherit" />
             </Backdrop>
             
             {/* Header Section */}
-            <Box sx={{ 
-                display: 'flex', 
-                flexDirection: { xs: 'column', sm: 'row' }, 
-                justifyContent: 'space-between', 
-                alignItems: { xs: 'stretch', sm: 'center' }, 
-                mb: 3, 
-                gap: 2 
-            }}>
-                <Box>
-                    <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                        Gestión de Equipos
-                    </Typography>
-                    <Typography variant="subtitle1" color="text.secondary">
-                        Cree, edite y gestione el inventario de equipos médicos.
-                    </Typography>
+            <Fade in={true} timeout={300}>
+                <Box sx={{ 
+                    display: 'flex', 
+                    flexDirection: { xs: 'column', sm: 'row' }, 
+                    justifyContent: 'space-between', 
+                    alignItems: { xs: 'stretch', sm: 'center' }, 
+                    mb: 3, 
+                    gap: 2 
+                }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Box
+                            sx={{
+                                p: 1.5,
+                                borderRadius: 2,
+                                backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                                display: { xs: 'none', sm: 'flex' },
+                            }}
+                        >
+                            <DevicesIcon sx={{ color: 'primary.main', fontSize: 28 }} />
+                        </Box>
+                        <Box>
+                            <Typography variant="h5" component="h1" sx={{ fontWeight: 700 }}>
+                                Gestión de Equipos
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Cree, edite y gestione el inventario de equipos médicos.
+                            </Typography>
+                        </Box>
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1, flexDirection: { xs: 'column', sm: 'row' } }} className="no-print">
+                        <Button 
+                            variant="outlined" 
+                            onClick={handlePrint} 
+                            startIcon={<PrintIcon />}
+                            sx={{ width: { xs: '100%', sm: 'auto' } }}
+                        >
+                            Imprimir
+                        </Button>
+                        <Button 
+                            variant="contained" 
+                            sx={{ color: 'white', width: { xs: '100%', sm: 'auto' } }} 
+                            onClick={() => handleOpenForm(null)} 
+                            startIcon={<AddIcon />}
+                        >
+                            Crear Equipo
+                        </Button>
+                    </Box>
                 </Box>
-                <Box sx={{ display: 'flex', gap: 1, flexDirection: { xs: 'column', sm: 'row' } }} className="no-print">
-                    <Button 
-                        variant="outlined" 
-                        onClick={handlePrint} 
-                        startIcon={<PrintIcon />}
-                        sx={{ width: { xs: '100%', sm: 'auto' } }}
-                    >
-                        Imprimir
-                    </Button>
-                    <Button 
-                        variant="contained" 
-                        sx={{ color: 'white', width: { xs: '100%', sm: 'auto' } }} 
-                        onClick={() => handleOpenForm(null)} 
-                        startIcon={<AddIcon />}
-                    >
-                        Crear Equipo
-                    </Button>
-                </Box>
-            </Box>
+            </Fade>
 
             {/* Search Bar */}
-            <Paper sx={{ p: 2, mb: 3 }} className="no-print">
-                <TextField
-                    fullWidth
-                    placeholder="Buscar por nombre, marca, modelo, número de serie, ID o ubicación..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <SearchIcon color="action" />
-                            </InputAdornment>
-                        ),
-                    }}
-                    sx={{
-                        '& .MuiOutlinedInput-root': {
-                            borderRadius: 2,
-                        }
-                    }}
-                />
-                {debouncedSearch && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                        Mostrando {totalEquipos} resultado(s) para "{debouncedSearch}"
-                    </Typography>
-                )}
-            </Paper>
+            <Fade in={true} timeout={400}>
+                <Paper 
+                    elevation={0} 
+                    sx={{ 
+                        p: 2, 
+                        mb: 3, 
+                        border: '1px solid', 
+                        borderColor: 'divider',
+                        borderRadius: 2,
+                    }} 
+                    className="no-print"
+                >
+                    <TextField
+                        fullWidth
+                        placeholder="Buscar por nombre, marca, modelo, número de serie, ID o ubicación..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        size="small"
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <SearchIcon color="action" />
+                                </InputAdornment>
+                            ),
+                        }}
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                borderRadius: 1.5,
+                            }
+                        }}
+                    />
+                    {debouncedSearch && (
+                        <Box sx={{ mt: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Chip 
+                                label={`${totalEquipos} resultado(s)`} 
+                                size="small" 
+                                color="primary" 
+                                variant="outlined"
+                            />
+                            <Typography variant="body2" color="text.secondary">
+                                para "{debouncedSearch}"
+                            </Typography>
+                        </Box>
+                    )}
+                </Paper>
+            </Fade>
 
             {/* Print Header - Only visible when printing */}
             <Box className="print-only" sx={{ display: 'none' }}>
@@ -306,25 +344,29 @@ const EquipoListPage = () => {
             </Box>
 
             {/* Table with horizontal scroll for all screen sizes */}
-            <Fade in={true} timeout={300}>
+            <Fade in={!loading} timeout={500}>
                 <Paper 
+                    elevation={0}
                     sx={{ 
                         width: '100%', 
                         overflow: 'hidden', 
                         position: 'relative',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 2,
                         transition: 'box-shadow 0.3s ease-in-out',
                     }}
                 >
-                    <TableContainer sx={{ maxHeight: { xs: 400, sm: 500, md: 'none' } }}>
-                        <Table stickyHeader size="medium">
+                    <TableContainer sx={{ maxHeight: { xs: 400, sm: 500, md: 600 } }}>
+                        <Table stickyHeader size="small">
                             <TableHead>
                                 <TableRow>
-                                    <TableCell sx={{ minWidth: 150, fontWeight: 'bold' }}>Nombre</TableCell>
-                                    <TableCell sx={{ minWidth: 120, fontWeight: 'bold' }}>Marca</TableCell>
-                                    <TableCell sx={{ minWidth: 120, fontWeight: 'bold' }}>Modelo</TableCell>
-                                    <TableCell sx={{ minWidth: 130, fontWeight: 'bold' }}>N/S</TableCell>
-                                    <TableCell sx={{ minWidth: 140, fontWeight: 'bold' }}>Ubicación</TableCell>
-                                    <TableCell sx={{ minWidth: 100, fontWeight: 'bold' }} align="right" className="no-print">Acciones</TableCell>
+                                    <TableCell sx={{ minWidth: 150, fontWeight: 600 }}>Nombre</TableCell>
+                                    <TableCell sx={{ minWidth: 120, fontWeight: 600 }}>Marca</TableCell>
+                                    <TableCell sx={{ minWidth: 120, fontWeight: 600 }}>Modelo</TableCell>
+                                    <TableCell sx={{ minWidth: 130, fontWeight: 600 }}>N/S</TableCell>
+                                    <TableCell sx={{ minWidth: 140, fontWeight: 600 }}>Ubicación</TableCell>
+                                    <TableCell sx={{ minWidth: 100, fontWeight: 600 }} align="right" className="no-print">Acciones</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -333,7 +375,7 @@ const EquipoListPage = () => {
                         </Table>
                     </TableContainer>
                     <TablePagination
-                        rowsPerPageOptions={[5, 10, 25]} 
+                        rowsPerPageOptions={[10, 25, 50]} 
                         component="div" 
                         count={totalEquipos}
                         rowsPerPage={rowsPerPage} 
@@ -343,6 +385,8 @@ const EquipoListPage = () => {
                         labelRowsPerPage="Por pág:"
                         className="no-print"
                         sx={{
+                            borderTop: '1px solid',
+                            borderColor: 'divider',
                             '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
                                 fontSize: { xs: '0.75rem', sm: '0.875rem' }
                             }
@@ -371,7 +415,7 @@ const EquipoListPage = () => {
                 title="Confirmar Eliminación de Manual"
                 message="¿Está seguro de que desea eliminar el manual asociado a este equipo? Esta acción no se puede deshacer."
             />
-        </Container>
+        </Box>
     );
 };
 

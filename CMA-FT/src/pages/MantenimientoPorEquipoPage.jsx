@@ -6,11 +6,12 @@ import MantenimientoForm from '../components/MantenimientoForm';
 import ConfirmationDialog from '../components/ConfirmationDialog';
 import TableSkeleton from '../components/TableSkeleton';
 import { 
-    Container, Typography, Box, Paper, TableContainer, Table, TableHead,
+    Box, Typography, Paper, TableContainer, Table, TableHead,
     TableRow, TableCell, TableBody, Button, IconButton,
     TablePagination, Backdrop, Tooltip, Fade, TextField, InputAdornment,
     Chip, Breadcrumbs, Link, CircularProgress
 } from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
@@ -19,10 +20,12 @@ import SearchIcon from '@mui/icons-material/Search';
 import PrintIcon from '@mui/icons-material/Print';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import HomeIcon from '@mui/icons-material/Home';
+import BuildIcon from '@mui/icons-material/Build';
 import toast from 'react-hot-toast';
 import React from 'react';
 
 const MantenimientoPorEquipoPage = () => {
+    const theme = useTheme();
     const { id: equipoId } = useParams();
     const navigate = useNavigate();
     const [equipo, setEquipo] = useState(null);
@@ -31,7 +34,7 @@ const MantenimientoPorEquipoPage = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
     const [total, setTotal] = useState(0);
     const [formOpen, setFormOpen] = useState(false);
     const [toEdit, setToEdit] = useState(null);
@@ -255,95 +258,132 @@ const MantenimientoPorEquipoPage = () => {
     };
 
     return (
-        <Container maxWidth="lg" className="print-container">
-            <Backdrop sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }} open={isSubmitting}>
+        <Box sx={{ maxWidth: 'lg', mx: 'auto' }} className="print-container">
+            <Backdrop sx={{ color: '#fff', zIndex: (th) => th.zIndex.drawer + 1 }} open={isSubmitting}>
                 <CircularProgress color="inherit" />
             </Backdrop>
 
             {/* Breadcrumbs */}
-            <Breadcrumbs 
-                separator={<NavigateNextIcon fontSize="small" />} 
-                sx={{ mb: 2 }}
-                className="no-print"
-            >
-                <Link 
-                    underline="hover" 
-                    color="inherit" 
-                    href="/dashboard"
-                    sx={{ display: 'flex', alignItems: 'center' }}
+            <Fade in={true} timeout={200}>
+                <Breadcrumbs 
+                    separator={<NavigateNextIcon fontSize="small" />} 
+                    sx={{ mb: 2 }}
+                    className="no-print"
                 >
-                    <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit" />
-                    Inicio
-                </Link>
-                <Link underline="hover" color="inherit" href="/equipos">
-                    Equipos
-                </Link>
-                <Typography color="text.primary">{equipo?.nombre || '...'}</Typography>
-            </Breadcrumbs>
+                    <Link 
+                        underline="hover" 
+                        color="inherit" 
+                        href="/dashboard"
+                        sx={{ display: 'flex', alignItems: 'center' }}
+                    >
+                        <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit" />
+                        Inicio
+                    </Link>
+                    <Link underline="hover" color="inherit" href="/equipos">
+                        Equipos
+                    </Link>
+                    <Typography color="text.primary">{equipo?.nombre || '...'}</Typography>
+                </Breadcrumbs>
+            </Fade>
 
             {/* Header Section */}
-            <Box sx={{ 
-                display: 'flex', 
-                flexDirection: { xs: 'column', sm: 'row' }, 
-                justifyContent: 'space-between', 
-                alignItems: { xs: 'stretch', sm: 'center' }, 
-                mb: 3, 
-                gap: 2 
-            }}>
-                <Box>
-                    <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                        Gestión de Mantenimientos
-                    </Typography>
-                    <Typography variant="subtitle1" color="text.secondary">
-                        Para el equipo: {equipo?.nombre || '...'}
-                    </Typography>
+            <Fade in={true} timeout={300}>
+                <Box sx={{ 
+                    display: 'flex', 
+                    flexDirection: { xs: 'column', sm: 'row' }, 
+                    justifyContent: 'space-between', 
+                    alignItems: { xs: 'stretch', sm: 'center' }, 
+                    mb: 3, 
+                    gap: 2 
+                }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Box
+                            sx={{
+                                p: 1.5,
+                                borderRadius: 2,
+                                backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                                display: { xs: 'none', sm: 'flex' },
+                            }}
+                        >
+                            <BuildIcon sx={{ color: 'primary.main', fontSize: 28 }} />
+                        </Box>
+                        <Box>
+                            <Typography variant="h5" component="h1" sx={{ fontWeight: 700 }}>
+                                Gestión de Mantenimientos
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Para el equipo: {equipo?.nombre || '...'}
+                            </Typography>
+                        </Box>
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1, flexDirection: { xs: 'column', sm: 'row' } }} className="no-print">
+                        <Button 
+                            variant="outlined" 
+                            onClick={handlePrint} 
+                            startIcon={<PrintIcon />}
+                            sx={{ width: { xs: '100%', sm: 'auto' } }}
+                        >
+                            Imprimir
+                        </Button>
+                        <Button 
+                            variant="contained" 
+                            sx={{ color: 'white', width: { xs: '100%', sm: 'auto' } }} 
+                            onClick={() => handleOpenForm(null)} 
+                            startIcon={<AddIcon />}
+                        >
+                            Nuevo Mantenimiento
+                        </Button>
+                    </Box>
                 </Box>
-                <Box sx={{ display: 'flex', gap: 1, flexDirection: { xs: 'column', sm: 'row' } }} className="no-print">
-                    <Button 
-                        variant="outlined" 
-                        onClick={handlePrint} 
-                        startIcon={<PrintIcon />}
-                        sx={{ width: { xs: '100%', sm: 'auto' } }}
-                    >
-                        Imprimir
-                    </Button>
-                    <Button 
-                        variant="contained" 
-                        sx={{ color: 'white', width: { xs: '100%', sm: 'auto' } }} 
-                        onClick={() => handleOpenForm(null)} 
-                        startIcon={<AddIcon />}
-                    >
-                        Nuevo Mantenimiento
-                    </Button>
-                </Box>
-            </Box>
+            </Fade>
 
             {/* Search Bar */}
-            <Paper sx={{ p: 2, mb: 3 }} className="no-print">
-                <TextField
-                    fullWidth
-                    placeholder="Buscar por tipo, observaciones o técnico..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <SearchIcon color="action" />
-                            </InputAdornment>
-                        ),
-                    }}
-                    sx={{
-                        '& .MuiOutlinedInput-root': {
-                            borderRadius: 2,
-                        }
-                    }}
-                />
-                {debouncedSearch && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                        Mostrando {filteredMantenimientos.length} resultado(s) para "{debouncedSearch}"
-                    </Typography>
-                )}
-            </Paper>
+            <Fade in={true} timeout={400}>
+                <Paper 
+                    elevation={0}
+                    sx={{ 
+                        p: 2, 
+                        mb: 3,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 2,
+                    }} 
+                    className="no-print"
+                >
+                    <TextField
+                        fullWidth
+                        placeholder="Buscar por tipo, observaciones o técnico..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        size="small"
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <SearchIcon color="action" />
+                                </InputAdornment>
+                            ),
+                        }}
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                borderRadius: 1.5,
+                            }
+                        }}
+                    />
+                    {debouncedSearch && (
+                        <Box sx={{ mt: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Chip 
+                                label={`${filteredMantenimientos.length} resultado(s)`} 
+                                size="small" 
+                                color="primary" 
+                                variant="outlined"
+                            />
+                            <Typography variant="body2" color="text.secondary">
+                                para "{debouncedSearch}"
+                            </Typography>
+                        </Box>
+                    )}
+                </Paper>
+            </Fade>
 
             {/* Print Header */}
             <Box className="print-only" sx={{ display: 'none' }}>
@@ -360,23 +400,27 @@ const MantenimientoPorEquipoPage = () => {
             </Box>
 
             {/* Table with horizontal scroll for all screen sizes */}
-            <Fade in={true} timeout={300}>
+            <Fade in={!loading} timeout={500}>
                 <Paper 
+                    elevation={0}
                     sx={{ 
                         width: '100%', 
                         overflow: 'hidden',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 2,
                         transition: 'box-shadow 0.3s ease-in-out',
                     }}
                 >
-                    <TableContainer sx={{ maxHeight: { xs: 400, sm: 500, md: 'none' } }}>
-                        <Table stickyHeader size="medium">
+                    <TableContainer sx={{ maxHeight: { xs: 400, sm: 500, md: 600 } }}>
+                        <Table stickyHeader size="small">
                             <TableHead>
                                 <TableRow>
-                                    <TableCell sx={{ minWidth: 130, fontWeight: 'bold' }}>Tipo</TableCell>
-                                    <TableCell sx={{ minWidth: 160, fontWeight: 'bold' }}>Fecha</TableCell>
-                                    <TableCell sx={{ minWidth: 140, fontWeight: 'bold' }}>Técnico</TableCell>
-                                    <TableCell sx={{ minWidth: 200, fontWeight: 'bold' }}>Observaciones</TableCell>
-                                    <TableCell sx={{ minWidth: 100, fontWeight: 'bold' }} align="right" className="no-print">Acciones</TableCell>
+                                    <TableCell sx={{ minWidth: 130, fontWeight: 600 }}>Tipo</TableCell>
+                                    <TableCell sx={{ minWidth: 160, fontWeight: 600 }}>Fecha</TableCell>
+                                    <TableCell sx={{ minWidth: 140, fontWeight: 600 }}>Técnico</TableCell>
+                                    <TableCell sx={{ minWidth: 200, fontWeight: 600 }}>Observaciones</TableCell>
+                                    <TableCell sx={{ minWidth: 100, fontWeight: 600 }} align="right" className="no-print">Acciones</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -385,7 +429,7 @@ const MantenimientoPorEquipoPage = () => {
                         </Table>
                     </TableContainer>
                     <TablePagination
-                        rowsPerPageOptions={[5, 10, 25]} 
+                        rowsPerPageOptions={[10, 25, 50]} 
                         component="div" 
                         count={total}
                         rowsPerPage={rowsPerPage} 
@@ -395,6 +439,8 @@ const MantenimientoPorEquipoPage = () => {
                         labelRowsPerPage="Por pág:"
                         className="no-print"
                         sx={{
+                            borderTop: '1px solid',
+                            borderColor: 'divider',
                             '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
                                 fontSize: { xs: '0.75rem', sm: '0.875rem' }
                             }
@@ -411,7 +457,7 @@ const MantenimientoPorEquipoPage = () => {
             )}
             <ConfirmationDialog open={confirmDeleteMantoOpen} onClose={handleCloseConfirmDeleteManto} onConfirm={handleDelete} title="Confirmar Eliminación" message="¿Está seguro de que desea eliminar este registro de mantenimiento?" />
             <ConfirmationDialog open={confirmDeleteEvidenciaOpen} onClose={handleCloseConfirmDeleteEvidencia} onConfirm={handleDeleteEvidencia} title="Confirmar Eliminación de Evidencia" message="¿Está seguro de que desea eliminar el archivo de evidencia?" />
-        </Container>
+        </Box>
     );
 };
 
