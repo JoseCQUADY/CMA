@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getEquipoById, getMantenimientosByEquipoId } from '../services/equipo.service.js';
 import { createMantenimiento, updateMantenimiento, deleteMantenimiento, deleteEvidencia } from '../services/mantenimiento.service.js';
@@ -7,16 +7,26 @@ import ConfirmationDialog from '../components/ConfirmationDialog';
 import { 
     Container, Typography, Box, Paper, TableContainer, Table, TableHead,
     TableRow, TableCell, TableBody, CircularProgress, Button, IconButton,
-    TablePagination, Backdrop, Tooltip, Fade
+    TablePagination, Backdrop, Tooltip, Fade, TextField, InputAdornment,
+    useMediaQuery, Card, CardContent, CardActions, Grid, Chip, Breadcrumbs, Link
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import InboxOutlinedIcon from '@mui/icons-material/InboxOutlined';
+import SearchIcon from '@mui/icons-material/Search';
+import PrintIcon from '@mui/icons-material/Print';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import PersonIcon from '@mui/icons-material/Person';
+import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import HomeIcon from '@mui/icons-material/Home';
 import toast from 'react-hot-toast';
 import React from 'react';
 
 const MantenimientoPorEquipoPage = () => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const { id: equipoId } = useParams();
     const navigate = useNavigate();
     const [equipo, setEquipo] = useState(null);
@@ -32,8 +42,19 @@ const MantenimientoPorEquipoPage = () => {
     const [confirmDeleteMantoOpen, setConfirmDeleteMantoOpen] = useState(false);
     const [confirmDeleteEvidenciaOpen, setConfirmDeleteEvidenciaOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     
-    const fetchMantenimientos = async () => {
+    // Debounce search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+            setPage(0);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    const fetchMantenimientos = useCallback(async () => {
         setLoading(true);
         setError('');
         try {
@@ -44,16 +65,24 @@ const MantenimientoPorEquipoPage = () => {
             const response = await getMantenimientosByEquipoId(equipoId, page + 1, rowsPerPage);
             setMantenimientos(response.data);
             setTotal(response.total);
-        } catch (err) {
+            // Store in localStorage
+            localStorage.setItem(`mantenimientos_${equipoId}`, JSON.stringify(response.data));
+        } catch {
             setError('Error al cargar los mantenimientos.');
+            // Try loading from cache
+            const cachedData = localStorage.getItem(`mantenimientos_${equipoId}`);
+            if (cachedData) {
+                setMantenimientos(JSON.parse(cachedData));
+                toast('Mostrando datos en caché', { icon: '📦' });
+            }
         } finally {
             setLoading(false);
         }
-    };
+    }, [equipoId, page, rowsPerPage, equipo]);
 
     useEffect(() => {
         fetchMantenimientos();
-    }, [equipoId, page, rowsPerPage]);
+    }, [fetchMantenimientos]);
     
     const handleChangePage = (event, newPage) => setPage(newPage);
     const handleChangeRowsPerPage = (event) => {
@@ -87,6 +116,10 @@ const MantenimientoPorEquipoPage = () => {
     const handleCloseConfirmDeleteEvidencia = () => {
         setItemToDelete(null);
         setConfirmDeleteEvidenciaOpen(false);
+    };
+
+    const handlePrint = () => {
+        window.print();
     };
 
     const handleSave = async (data, evidenciaFile) => {
@@ -157,27 +190,141 @@ const MantenimientoPorEquipoPage = () => {
         }
     };
 
+    // Filter mantenimientos based on search
+    const filteredMantenimientos = debouncedSearch
+        ? mantenimientos.filter(m => 
+            m.tipoMantenimiento.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+            m.observaciones.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+            m.tecnico?.nombre?.toLowerCase().includes(debouncedSearch.toLowerCase())
+          )
+        : mantenimientos;
+
+    const getTypeColor = (tipo) => {
+        const lowercaseTipo = tipo.toLowerCase();
+        if (lowercaseTipo.includes('correctivo')) return 'warning';
+        if (lowercaseTipo.includes('preventivo')) return 'success';
+        return 'info';
+    };
+
     const renderEmptyState = () => (
         <Box sx={{ p: 4, textAlign: 'center' }}>
             <InboxOutlinedIcon sx={{ fontSize: 60, color: 'grey.400' }} />
-            <Typography variant="h6" color="text.secondary">No hay registros</Typography>
-            <Typography>Cree el primer registro de mantenimiento para este equipo.</Typography>
+            <Typography variant="h6" color="text.secondary">
+                {debouncedSearch ? 'No se encontraron registros' : 'No hay registros'}
+            </Typography>
+            <Typography>
+                {debouncedSearch 
+                    ? 'Intente con otros términos de búsqueda.'
+                    : 'Cree el primer registro de mantenimiento para este equipo.'}
+            </Typography>
         </Box>
     );
+
+    // Mobile card view
+    const renderMobileCards = () => {
+        if (loading) return <Box sx={{ textAlign: 'center', py: 4 }}><CircularProgress /></Box>;
+        if (error) return <Typography color="error" align="center">{error}</Typography>;
+        if (filteredMantenimientos.length === 0) return renderEmptyState();
+
+        return (
+            <Grid container spacing={2}>
+                {filteredMantenimientos.map((mantenimiento, index) => (
+                    <Grid item xs={12} key={mantenimiento.id}>
+                        <Fade in={true} timeout={300 * (index + 1)}>
+                            <Card 
+                                elevation={2} 
+                                sx={{ 
+                                    cursor: 'pointer',
+                                    transition: 'transform 0.2s, box-shadow 0.2s',
+                                    '&:hover': {
+                                        transform: 'translateY(-4px)',
+                                        boxShadow: 6,
+                                    }
+                                }}
+                                onClick={() => navigate(`/mantenimiento/${mantenimiento.id}`)}
+                            >
+                                <CardContent>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                                        <Chip 
+                                            label={mantenimiento.tipoMantenimiento} 
+                                            color={getTypeColor(mantenimiento.tipoMantenimiento)}
+                                            size="small"
+                                        />
+                                        <Typography variant="caption" color="text.secondary">
+                                            {new Date(mantenimiento.fecha).toLocaleDateString()}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2, mb: 1 }}>
+                                        <PersonIcon fontSize="small" color="action" />
+                                        <Typography variant="body2">
+                                            {mantenimiento.tecnico?.nombre || 'N/A'}
+                                        </Typography>
+                                    </Box>
+                                    <Typography 
+                                        variant="body2" 
+                                        color="text.secondary"
+                                        sx={{ 
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            display: '-webkit-box',
+                                            WebkitLineClamp: 2,
+                                            WebkitBoxOrient: 'vertical',
+                                        }}
+                                    >
+                                        {mantenimiento.observaciones}
+                                    </Typography>
+                                </CardContent>
+                                <CardActions sx={{ justifyContent: 'flex-end', pt: 0 }} onClick={(e) => e.stopPropagation()}>
+                                    <Tooltip title="Editar">
+                                        <IconButton 
+                                            onClick={(e) => { e.stopPropagation(); handleOpenForm(mantenimiento); }} 
+                                            color="secondary" 
+                                            disabled={isSubmitting}
+                                            size="small"
+                                        >
+                                            <EditIcon />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Eliminar">
+                                        <IconButton 
+                                            onClick={(e) => { e.stopPropagation(); handleOpenConfirmDeleteManto(mantenimiento.id); }} 
+                                            color="error" 
+                                            disabled={isSubmitting}
+                                            size="small"
+                                        >
+                                            <DeleteIcon />
+                                        </IconButton>
+                                    </Tooltip>
+                                </CardActions>
+                            </Card>
+                        </Fade>
+                    </Grid>
+                ))}
+            </Grid>
+        );
+    };
 
     const renderTableContent = () => {
         if (loading) return <TableRow><TableCell colSpan={5} align="center" sx={{ py: 4 }}><CircularProgress /></TableCell></TableRow>;
         if (error) return <TableRow><TableCell colSpan={5} align="center"><Typography color="error">{error}</Typography></TableCell></TableRow>;
-        if (mantenimientos.length === 0) return <TableRow><TableCell colSpan={5} align="center" sx={{ py: 10 }}>{renderEmptyState()}</TableCell></TableRow>;
+        if (filteredMantenimientos.length === 0) return <TableRow><TableCell colSpan={5} align="center" sx={{ py: 10 }}>{renderEmptyState()}</TableCell></TableRow>;
 
-        return mantenimientos.map((mantenimiento, index) => (
+        return filteredMantenimientos.map((mantenimiento, index) => (
             <Fade in={true} timeout={300 * (index + 1)} key={mantenimiento.id}>
                 <TableRow hover onClick={() => navigate(`/mantenimiento/${mantenimiento.id}`)} sx={{ cursor: 'pointer' }}>
-                    <TableCell>{mantenimiento.tipoMantenimiento}</TableCell>
+                    <TableCell>
+                        <Chip 
+                            label={mantenimiento.tipoMantenimiento} 
+                            color={getTypeColor(mantenimiento.tipoMantenimiento)}
+                            size="small"
+                        />
+                    </TableCell>
                     <TableCell>{new Date(mantenimiento.fecha).toLocaleString()}</TableCell>
                     <TableCell>{mantenimiento.tecnico?.nombre || 'N/A'}</TableCell>
-                    <TableCell sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{mantenimiento.observaciones}</TableCell>
-                    <TableCell align="right" onClick={(e) => e.stopPropagation()}>
+                    <TableCell sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 300 }}>
+                        {mantenimiento.observaciones}
+                    </TableCell>
+                    <TableCell align="right" onClick={(e) => e.stopPropagation()} className="no-print">
                         <Tooltip title="Editar"><IconButton onClick={(e) => { e.stopPropagation(); handleOpenForm(mantenimiento); }} color="secondary" disabled={isSubmitting}><EditIcon /></IconButton></Tooltip>
                         <Tooltip title="Eliminar"><IconButton onClick={(e) => { e.stopPropagation(); handleOpenConfirmDeleteManto(mantenimiento.id); }} color="error" disabled={isSubmitting}><DeleteIcon /></IconButton></Tooltip>
                     </TableCell>
@@ -187,11 +334,41 @@ const MantenimientoPorEquipoPage = () => {
     };
 
     return (
-        <Container maxWidth="lg">
+        <Container maxWidth="lg" className="print-container">
             <Backdrop sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }} open={isSubmitting}>
                 <CircularProgress color="inherit" />
             </Backdrop>
-            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, mb: 4, gap: 2 }}>
+
+            {/* Breadcrumbs */}
+            <Breadcrumbs 
+                separator={<NavigateNextIcon fontSize="small" />} 
+                sx={{ mb: 2 }}
+                className="no-print"
+            >
+                <Link 
+                    underline="hover" 
+                    color="inherit" 
+                    href="/dashboard"
+                    sx={{ display: 'flex', alignItems: 'center' }}
+                >
+                    <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit" />
+                    Inicio
+                </Link>
+                <Link underline="hover" color="inherit" href="/equipos">
+                    Equipos
+                </Link>
+                <Typography color="text.primary">{equipo?.nombre || '...'}</Typography>
+            </Breadcrumbs>
+
+            {/* Header Section */}
+            <Box sx={{ 
+                display: 'flex', 
+                flexDirection: { xs: 'column', sm: 'row' }, 
+                justifyContent: 'space-between', 
+                alignItems: { xs: 'stretch', sm: 'center' }, 
+                mb: 3, 
+                gap: 2 
+            }}>
                 <Box>
                     <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
                         Gestión de Mantenimientos
@@ -200,34 +377,110 @@ const MantenimientoPorEquipoPage = () => {
                         Para el equipo: {equipo?.nombre || '...'}
                     </Typography>
                 </Box>
-                <Button variant="contained" sx={{ color: 'white', width: { xs: '100%', sm: 'auto' } }} onClick={() => handleOpenForm(null)} startIcon={<AddIcon />}>
-                    Nuevo Mantenimiento
-                </Button>
+                <Box sx={{ display: 'flex', gap: 1, flexDirection: { xs: 'column', sm: 'row' } }} className="no-print">
+                    <Button 
+                        variant="outlined" 
+                        onClick={handlePrint} 
+                        startIcon={<PrintIcon />}
+                        sx={{ width: { xs: '100%', sm: 'auto' } }}
+                    >
+                        Imprimir
+                    </Button>
+                    <Button 
+                        variant="contained" 
+                        sx={{ color: 'white', width: { xs: '100%', sm: 'auto' } }} 
+                        onClick={() => handleOpenForm(null)} 
+                        startIcon={<AddIcon />}
+                    >
+                        Nuevo Mantenimiento
+                    </Button>
+                </Box>
             </Box>
 
-            <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-                <TableContainer>
-                    <Table>
-                        <TableHead>
-                             <TableRow sx={{ '& .MuiTableCell-root': { backgroundColor: 'grey.100', fontWeight: 'bold' } }}>
-                                <TableCell sx={{ minWidth: 150 }}>Tipo</TableCell>
-                                <TableCell sx={{ minWidth: 200 }}>Fecha</TableCell>
-                                <TableCell sx={{ minWidth: 170 }}>Técnico</TableCell>
-                                <TableCell sx={{ minWidth: 300 }}>Observaciones</TableCell>
-                                <TableCell sx={{ minWidth: 120 }} align="right">Acciones</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {renderTableContent()}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-                <TablePagination
-                    rowsPerPageOptions={[5, 10, 25]} component="div" count={total}
-                    rowsPerPage={rowsPerPage} page={page} onPageChange={handleChangePage}
-                    onRowsPerPageChange={handleChangeRowsPerPage} labelRowsPerPage="Filas por página:"
+            {/* Search Bar */}
+            <Paper sx={{ p: 2, mb: 3 }} className="no-print">
+                <TextField
+                    fullWidth
+                    placeholder="Buscar por tipo, observaciones o técnico..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <SearchIcon color="action" />
+                            </InputAdornment>
+                        ),
+                    }}
+                    sx={{
+                        '& .MuiOutlinedInput-root': {
+                            borderRadius: 2,
+                        }
+                    }}
                 />
+                {debouncedSearch && (
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        Mostrando {filteredMantenimientos.length} resultado(s) para "{debouncedSearch}"
+                    </Typography>
+                )}
             </Paper>
+
+            {/* Print Header */}
+            <Box className="print-only" sx={{ display: 'none' }}>
+                <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 1, textAlign: 'center' }}>
+                    Historial de Mantenimientos - {equipo?.nombre}
+                </Typography>
+                <Typography variant="body2" sx={{ mb: 2, textAlign: 'center' }}>
+                    Generado: {new Date().toLocaleDateString('es-ES', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric'
+                    })}
+                </Typography>
+            </Box>
+
+            {/* Content */}
+            {isMobile ? (
+                <Box>
+                    {renderMobileCards()}
+                    <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+                        <TablePagination
+                            component="div"
+                            rowsPerPageOptions={[5, 10, 25]}
+                            count={total}
+                            rowsPerPage={rowsPerPage}
+                            page={page}
+                            onPageChange={handleChangePage}
+                            onRowsPerPageChange={handleChangeRowsPerPage}
+                            labelRowsPerPage="Por página:"
+                        />
+                    </Box>
+                </Box>
+            ) : (
+                <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+                    <TableContainer>
+                        <Table>
+                            <TableHead>
+                                 <TableRow sx={{ '& .MuiTableCell-root': { backgroundColor: 'grey.100', fontWeight: 'bold' } }}>
+                                    <TableCell sx={{ minWidth: 150 }}>Tipo</TableCell>
+                                    <TableCell sx={{ minWidth: 200 }}>Fecha</TableCell>
+                                    <TableCell sx={{ minWidth: 170 }}>Técnico</TableCell>
+                                    <TableCell sx={{ minWidth: 300 }}>Observaciones</TableCell>
+                                    <TableCell sx={{ minWidth: 120 }} align="right" className="no-print">Acciones</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {renderTableContent()}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                    <TablePagination
+                        rowsPerPageOptions={[5, 10, 25]} component="div" count={total}
+                        rowsPerPage={rowsPerPage} page={page} onPageChange={handleChangePage}
+                        onRowsPerPageChange={handleChangeRowsPerPage} labelRowsPerPage="Filas por página:"
+                        className="no-print"
+                    />
+                </Paper>
+            )}
 
             {formOpen && (
                 <MantenimientoForm 

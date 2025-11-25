@@ -1,8 +1,10 @@
 import axiosInstance from '../utils/axiosInstance';
 
-export const getAllUsers = async (page = 1, limit = 10) => {
+export const getAllUsers = async (page = 1, limit = 10, search = '') => {
     try {
-        const response = await axiosInstance.get(`/usuarios?page=${page}&limit=${limit}`);
+        const params = new URLSearchParams({ page, limit });
+        if (search) params.append('search', search);
+        const response = await axiosInstance.get(`/usuarios?${params.toString()}`);
         return response.data;
     } catch (error) {
         console.error("Error al obtener los usuarios:", error);

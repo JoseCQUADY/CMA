@@ -18,10 +18,31 @@ export async function createUser(userData) {
     });
 }
 
-export async function findAllUsers(page = 1, limit = 10) {
+export async function findAllUsers(page = 1, limit = 10, search = '') {
     const skip = (page - 1) * limit;
+    
+    // Build search filter if search term provided
+    let searchFilter = {};
+    if (search) {
+        const searchConditions = [
+            { nombre: { contains: search, mode: 'insensitive' } },
+            { email: { contains: search, mode: 'insensitive' } },
+        ];
+        
+        // Only add rol filter if search matches a valid role
+        const upperSearch = search.toUpperCase();
+        if (upperSearch === 'ADMIN' || upperSearch === 'TECNICO') {
+            searchConditions.push({ rol: { equals: upperSearch } });
+        }
+        
+        searchFilter = { OR: searchConditions };
+    }
+
+    const whereClause = Object.keys(searchFilter).length > 0 ? searchFilter : {};
+
     const [usuarios, total] = await prisma.$transaction([
         prisma.usuario.findMany({
+            where: whereClause,
             skip: skip,
             take: limit,
             orderBy: { createdAt: 'desc' },
@@ -34,13 +55,14 @@ export async function findAllUsers(page = 1, limit = 10) {
                 createdAt: true
             }
         }),
-        prisma.usuario.count()
+        prisma.usuario.count({ where: whereClause })
     ]);
     return {
         data: usuarios,
         total,
         page,
-        totalPages: Math.ceil(total / limit)
+        totalPages: Math.ceil(total / limit),
+        search
     };
 }
 
