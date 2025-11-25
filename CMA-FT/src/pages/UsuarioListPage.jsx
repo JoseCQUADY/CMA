@@ -4,11 +4,12 @@ import UsuarioForm from '../components/UsuarioForm';
 import ConfirmationDialog from '../components/ConfirmationDialog';
 import TableSkeleton from '../components/TableSkeleton';
 import { 
-    Container, Typography, Box, Paper, TableContainer, Table, TableHead,
+    Box, Typography, Paper, TableContainer, Table, TableHead,
     TableRow, TableCell, TableBody, Button, IconButton,
     TablePagination, Chip, Backdrop, Tooltip, Fade, TextField, InputAdornment,
     Avatar, CircularProgress
 } from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
@@ -16,16 +17,18 @@ import InboxOutlinedIcon from '@mui/icons-material/InboxOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import PrintIcon from '@mui/icons-material/Print';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import PeopleIcon from '@mui/icons-material/People';
 import toast from 'react-hot-toast';
 import React from 'react';
 
 const UsuarioListPage = () => {
+    const theme = useTheme();
     const [usuarios, setUsuarios] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(5);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalUsers, setTotalUsers] = useState(0);
     const [formOpen, setFormOpen] = useState(false);
     const [userToEdit, setUserToEdit] = useState(null);
@@ -184,74 +187,109 @@ const UsuarioListPage = () => {
     };
 
     return (
-        <Container maxWidth="lg" className="print-container">
-            <Backdrop sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }} open={isSubmitting}>
+        <Box sx={{ maxWidth: 'lg', mx: 'auto' }} className="print-container">
+            <Backdrop sx={{ color: '#fff', zIndex: (th) => th.zIndex.drawer + 1 }} open={isSubmitting}>
                 <CircularProgress color="inherit" />
             </Backdrop>
 
             {/* Header Section */}
-            <Box sx={{ 
-                display: 'flex', 
-                flexDirection: { xs: 'column', sm: 'row' }, 
-                justifyContent: 'space-between', 
-                alignItems: { xs: 'stretch', sm: 'center' }, 
-                mb: 3, 
-                gap: 2 
-            }}>
-                <Box>
-                    <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                        Gestión de Usuarios
-                    </Typography>
-                    <Typography variant="subtitle1" color="text.secondary">
-                        Cree, edite y gestione las cuentas del personal técnico.
-                    </Typography>
+            <Fade in={true} timeout={300}>
+                <Box sx={{ 
+                    display: 'flex', 
+                    flexDirection: { xs: 'column', sm: 'row' }, 
+                    justifyContent: 'space-between', 
+                    alignItems: { xs: 'stretch', sm: 'center' }, 
+                    mb: 3, 
+                    gap: 2 
+                }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Box
+                            sx={{
+                                p: 1.5,
+                                borderRadius: 2,
+                                backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                                display: { xs: 'none', sm: 'flex' },
+                            }}
+                        >
+                            <PeopleIcon sx={{ color: 'primary.main', fontSize: 28 }} />
+                        </Box>
+                        <Box>
+                            <Typography variant="h5" component="h1" sx={{ fontWeight: 700 }}>
+                                Gestión de Usuarios
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Cree, edite y gestione las cuentas del personal técnico.
+                            </Typography>
+                        </Box>
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1, flexDirection: { xs: 'column', sm: 'row' } }} className="no-print">
+                        <Button 
+                            variant="outlined" 
+                            onClick={handlePrint} 
+                            startIcon={<PrintIcon />}
+                            sx={{ width: { xs: '100%', sm: 'auto' } }}
+                        >
+                            Imprimir
+                        </Button>
+                        <Button 
+                            variant="contained" 
+                            sx={{ color: 'white', width: { xs: '100%', sm: 'auto' } }} 
+                            onClick={() => handleOpenForm(null)} 
+                            startIcon={<AddIcon />}
+                        >
+                            Nuevo Usuario
+                        </Button>
+                    </Box>
                 </Box>
-                <Box sx={{ display: 'flex', gap: 1, flexDirection: { xs: 'column', sm: 'row' } }} className="no-print">
-                    <Button 
-                        variant="outlined" 
-                        onClick={handlePrint} 
-                        startIcon={<PrintIcon />}
-                        sx={{ width: { xs: '100%', sm: 'auto' } }}
-                    >
-                        Imprimir
-                    </Button>
-                    <Button 
-                        variant="contained" 
-                        sx={{ color: 'white', width: { xs: '100%', sm: 'auto' } }} 
-                        onClick={() => handleOpenForm(null)} 
-                        startIcon={<AddIcon />}
-                    >
-                        Nuevo Usuario
-                    </Button>
-                </Box>
-            </Box>
+            </Fade>
 
             {/* Search Bar */}
-            <Paper sx={{ p: 2, mb: 3 }} className="no-print">
-                <TextField
-                    fullWidth
-                    placeholder="Buscar por nombre, email o rol..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <SearchIcon color="action" />
-                            </InputAdornment>
-                        ),
-                    }}
-                    sx={{
-                        '& .MuiOutlinedInput-root': {
-                            borderRadius: 2,
-                        }
-                    }}
-                />
-                {debouncedSearch && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                        Mostrando {totalUsers} resultado(s) para "{debouncedSearch}"
-                    </Typography>
-                )}
-            </Paper>
+            <Fade in={true} timeout={400}>
+                <Paper 
+                    elevation={0}
+                    sx={{ 
+                        p: 2, 
+                        mb: 3,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 2,
+                    }} 
+                    className="no-print"
+                >
+                    <TextField
+                        fullWidth
+                        placeholder="Buscar por nombre, email o rol..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        size="small"
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <SearchIcon color="action" />
+                                </InputAdornment>
+                            ),
+                        }}
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                borderRadius: 1.5,
+                            }
+                        }}
+                    />
+                    {debouncedSearch && (
+                        <Box sx={{ mt: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Chip 
+                                label={`${totalUsers} resultado(s)`} 
+                                size="small" 
+                                color="primary" 
+                                variant="outlined"
+                            />
+                            <Typography variant="body2" color="text.secondary">
+                                para "{debouncedSearch}"
+                            </Typography>
+                        </Box>
+                    )}
+                </Paper>
+            </Fade>
 
             {/* Print Header - Only visible when printing */}
             <Box className="print-only" sx={{ display: 'none' }}>
@@ -270,30 +308,34 @@ const UsuarioListPage = () => {
             </Box>
 
             {/* Table with horizontal scroll for all screen sizes */}
-            <Fade in={true} timeout={300}>
+            <Fade in={!loading} timeout={500}>
                 <Paper 
+                    elevation={0}
                     sx={{ 
                         width: '100%', 
                         overflow: 'hidden',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 2,
                         transition: 'box-shadow 0.3s ease-in-out',
                     }}
                 >
-                    <TableContainer sx={{ maxHeight: { xs: 400, sm: 500, md: 'none' } }}>
-                        <Table stickyHeader size="medium">
+                    <TableContainer sx={{ maxHeight: { xs: 400, sm: 500, md: 600 } }}>
+                        <Table stickyHeader size="small">
                             <TableHead>
                                 <TableRow>
-                                    <TableCell sx={{ minWidth: 180, fontWeight: 'bold' }}>Nombre</TableCell>
-                                    <TableCell sx={{ minWidth: 180, fontWeight: 'bold' }}>Email</TableCell>
-                                    <TableCell sx={{ minWidth: 100, fontWeight: 'bold' }}>Rol</TableCell>
-                                    <TableCell sx={{ minWidth: 90, fontWeight: 'bold' }}>Estado</TableCell>
-                                    <TableCell sx={{ minWidth: 100, fontWeight: 'bold' }} align="right" className="no-print">Acciones</TableCell>
+                                    <TableCell sx={{ minWidth: 180, fontWeight: 600 }}>Nombre</TableCell>
+                                    <TableCell sx={{ minWidth: 180, fontWeight: 600 }}>Email</TableCell>
+                                    <TableCell sx={{ minWidth: 100, fontWeight: 600 }}>Rol</TableCell>
+                                    <TableCell sx={{ minWidth: 90, fontWeight: 600 }}>Estado</TableCell>
+                                    <TableCell sx={{ minWidth: 100, fontWeight: 600 }} align="right" className="no-print">Acciones</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>{renderTableContent()}</TableBody>
                         </Table>
                     </TableContainer>
                     <TablePagination
-                        rowsPerPageOptions={[5, 10, 25]}
+                        rowsPerPageOptions={[10, 25, 50]}
                         component="div"
                         count={totalUsers}
                         rowsPerPage={rowsPerPage}
@@ -303,6 +345,8 @@ const UsuarioListPage = () => {
                         labelRowsPerPage="Por pág:"
                         className="no-print"
                         sx={{
+                            borderTop: '1px solid',
+                            borderColor: 'divider',
                             '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
                                 fontSize: { xs: '0.75rem', sm: '0.875rem' }
                             }
@@ -321,7 +365,7 @@ const UsuarioListPage = () => {
                 title="Confirmar Desactivación"
                 message="¿Está seguro de que desea desactivar esta cuenta de usuario?"
             />
-        </Container>
+        </Box>
     );
 };
 

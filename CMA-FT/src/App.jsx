@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { CircularProgress, Box } from '@mui/material';
 import { Toaster } from 'react-hot-toast';
 import React from 'react';
+import DashboardLayout from './components/DashboardLayout';
 import MainLayout from './components/MainLayout';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
@@ -22,7 +23,7 @@ function AppRouter() {
                 <Route element={<MainLayout />}> <Route path="/equipo/:id" element={<EquipoDetailPage />} /> </Route>
                 
                 {user && (
-                    <Route element={<MainLayout />}>
+                    <Route element={<DashboardLayout />}>
                         <Route path="/dashboard" element={<DashboardPage />} />
                         <Route path="/equipos" element={<EquipoListPage />} />
                         <Route path="/equipo/:id/mantenimientos" element={<MantenimientoPorEquipoPage />} />

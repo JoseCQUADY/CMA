@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Box, Container, Grid, Paper, Typography, Avatar, Skeleton, useMediaQuery, Fade, Grow } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '@mui/material/styles';
+import { useTheme, alpha } from '@mui/material/styles';
 import DevicesIcon from '@mui/icons-material/Devices';
 import PeopleIcon from '@mui/icons-material/People';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
@@ -10,7 +10,7 @@ import BuildIcon from '@mui/icons-material/Build';
 import { getLocalStorage, setLocalStorage } from '../utils/cookie.js';
 import { getSystemStats } from '../services/stats.service.js';
 
-const DashboardCard = ({ title, description, link, icon, disabled = false, stats, index = 0 }) => {
+const DashboardCard = ({ title, description, link, icon, disabled = false, stats, index = 0, loading = false }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -20,13 +20,13 @@ const DashboardCard = ({ title, description, link, icon, disabled = false, stats
 
     return (
         <Grid item xs={12} sm={6} md={4}>
-            <Grow in={true} timeout={400 + (index * 100)}>
+            <Grow in={!loading} timeout={400 + (index * 100)}>
                 <Paper
                     component={Link}
                     to={link}
-                    elevation={2}
+                    elevation={0}
                     sx={{
-                        p: { xs: 2, sm: 3 },
+                        p: { xs: 2.5, sm: 3 },
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'flex-start',
@@ -36,24 +36,33 @@ const DashboardCard = ({ title, description, link, icon, disabled = false, stats
                         color: 'inherit',
                         backgroundColor: 'background.paper',
                         cursor: 'pointer',
-                        border: '1px solid transparent',
+                        border: '1px solid',
+                        borderColor: 'divider',
                         borderRadius: 2,
-                        transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out, border-color 0.3s ease-in-out',
+                        transition: 'all 0.3s ease-in-out',
                         '&:hover': {
-                            transform: 'translateY(-8px)',
-                            boxShadow: 8,
+                            transform: 'translateY(-4px)',
+                            boxShadow: theme.shadows[8],
                             borderColor: 'primary.main',
                         },
                     }}
                 >
                     <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', mb: 2 }}>
-                        <Avatar sx={{ bgcolor: 'primary.main', width: { xs: 48, sm: 56 }, height: { xs: 48, sm: 56 }, mr: 2 }}>
+                        <Avatar 
+                            sx={{ 
+                                bgcolor: alpha(theme.palette.primary.main, 0.1), 
+                                color: 'primary.main',
+                                width: { xs: 48, sm: 56 }, 
+                                height: { xs: 48, sm: 56 }, 
+                                mr: 2 
+                            }}
+                        >
                         {icon}
                     </Avatar>
                     {stats !== undefined && (
                         <Box sx={{ ml: 'auto', textAlign: 'right' }}>
                             <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                                {stats}
+                                {loading ? <Skeleton width={40} /> : stats}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
                                 registros
@@ -62,7 +71,7 @@ const DashboardCard = ({ title, description, link, icon, disabled = false, stats
                     )}
                 </Box>
                 <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-                    <Typography variant={isMobile ? 'subtitle1' : 'h6'} component="h3" sx={{ fontWeight: 'bold' }}>
+                    <Typography variant={isMobile ? 'subtitle1' : 'h6'} component="h3" sx={{ fontWeight: 600 }}>
                         {title}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
@@ -75,38 +84,50 @@ const DashboardCard = ({ title, description, link, icon, disabled = false, stats
     );
 };
 
-const StatCard = ({ title, value, icon, color = 'primary.main', loading = false, index = 0 }) => (
-    <Fade in={true} timeout={300 + (index * 100)}>
-        <Paper 
-            elevation={1} 
-            sx={{ 
-                p: 2, 
-                display: 'flex', 
-                alignItems: 'center',
-                borderRadius: 2,
-                borderLeft: 4,
-                borderColor: color,
-                transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
-                '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: 4,
-                },
-            }}
-        >
-            <Avatar sx={{ bgcolor: color, mr: 2 }}>
-                {icon}
-            </Avatar>
-            <Box>
-                <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                    {loading ? <Skeleton width={40} animation="wave" /> : value}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                    {title}
-                </Typography>
-            </Box>
-        </Paper>
-    </Fade>
-);
+const StatCard = ({ title, value, icon, color = 'primary.main', loading = false, index = 0 }) => {
+    const theme = useTheme();
+    
+    return (
+        <Fade in={true} timeout={300 + (index * 100)}>
+            <Paper 
+                elevation={0} 
+                sx={{ 
+                    p: 2.5, 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    borderRadius: 2,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderLeft: 4,
+                    borderLeftColor: color,
+                    transition: 'all 0.2s ease-in-out',
+                    '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: theme.shadows[4],
+                    },
+                }}
+            >
+                <Avatar 
+                    sx={{ 
+                        bgcolor: alpha(theme.palette.mode === 'dark' ? theme.palette.primary.light : color, 0.1), 
+                        color: color,
+                        mr: 2 
+                    }}
+                >
+                    {icon}
+                </Avatar>
+                <Box>
+                    <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                        {loading ? <Skeleton width={40} animation="wave" /> : value}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                        {title}
+                    </Typography>
+                </Box>
+            </Paper>
+        </Fade>
+    );
+};
 
 const DashboardPage = () => {
     const { user } = useAuth();
@@ -146,17 +167,17 @@ const DashboardPage = () => {
     }, []);
 
     return (
-        <Container maxWidth="lg">
+        <Box sx={{ maxWidth: 'lg', mx: 'auto' }}>
             {/* Welcome Banner */}
             <Fade in={true} timeout={400}>
-                <Box
-                    component={Paper}
-                    elevation={2}
+                <Paper
+                    elevation={0}
                     sx={{
                         mb: 4,
-                        p: { xs: 2, sm: 3, md: 4 },
+                        p: { xs: 2.5, sm: 3, md: 4 },
                         borderRadius: 2,
-                        backgroundColor: 'primary.main',
+                        background: (theme) => 
+                            `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
                         color: 'white',
                         position: 'relative',
                         overflow: 'hidden',
@@ -166,18 +187,18 @@ const DashboardPage = () => {
                         <Typography 
                             variant={isMobile ? 'h5' : 'h4'} 
                             component="h1" 
-                            sx={{ fontWeight: 'bold' }}
+                            sx={{ fontWeight: 700 }}
                         >
                             Bienvenido de nuevo, {user?.nombre}
                         </Typography>
                         <Typography 
                             variant={isMobile ? 'body2' : 'subtitle1'} 
-                            sx={{ mt: 1, color: 'grey.300' }}
+                            sx={{ mt: 1, opacity: 0.9 }}
                         >
                             Seleccione una de las siguientes opciones para comenzar.
                         </Typography>
                         {lastVisit && (
-                            <Typography variant="caption" sx={{ mt: 2, display: 'block', color: 'grey.400' }}>
+                            <Typography variant="caption" sx={{ mt: 2, display: 'block', opacity: 0.7 }}>
                                 Última visita: {lastVisit.toLocaleDateString('es-ES', { 
                                     weekday: 'long',
                                     year: 'numeric', 
@@ -189,7 +210,7 @@ const DashboardPage = () => {
                             </Typography>
                         )}
                     </Box>
-                    {/* Decorative element */}
+                    {/* Decorative elements */}
                     <Box
                         sx={{
                             position: 'absolute',
@@ -202,13 +223,29 @@ const DashboardPage = () => {
                             display: { xs: 'none', md: 'block' }
                         }}
                     />
-                </Box>
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            right: 100,
+                            bottom: -80,
+                            width: 150,
+                            height: 150,
+                            borderRadius: '50%',
+                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                            display: { xs: 'none', md: 'block' }
+                        }}
+                    />
+                </Paper>
             </Fade>
 
             {/* Quick Stats */}
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: 'text.secondary' }}>
-                Estadísticas del Sistema
-            </Typography>
+            <Fade in={!loadingStats} timeout={500}>
+                <Box>
+                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                        Estadísticas del Sistema
+                    </Typography>
+                </Box>
+            </Fade>
             <Grid container spacing={2} sx={{ mb: 4 }}>
                 <Grid item xs={6} md={3}>
                     <StatCard 
@@ -253,16 +290,21 @@ const DashboardPage = () => {
             </Grid>
             
             {/* Main Navigation Cards */}
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: 'text.secondary' }}>
-                Accesos Rápidos
-            </Typography>
-            <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} sx={{ alignItems: 'stretch' }}>
+            <Fade in={!loadingStats} timeout={600}>
+                <Box>
+                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                        Accesos Rápidos
+                    </Typography>
+                </Box>
+            </Fade>
+            <Grid container spacing={{ xs: 2, sm: 3 }} sx={{ alignItems: 'stretch' }}>
                 <DashboardCard
                     title="Gestionar Equipos"
                     description="Ver, crear, editar y eliminar el inventario de equipos médicos."
                     link="/equipos"
-                    icon={<DevicesIcon sx={{ fontSize: { xs: 28, sm: 32 }, color: 'white' }} />}
+                    icon={<DevicesIcon sx={{ fontSize: { xs: 24, sm: 28 } }} />}
                     stats={stats?.equipos_activos}
+                    loading={loadingStats}
                     index={0}
                 />
                 
@@ -270,9 +312,10 @@ const DashboardPage = () => {
                     title="Gestionar Usuarios"
                     description="Ver, crear, editar y eliminar las cuentas del personal médico."
                     link="/admin/usuarios"
-                    icon={<PeopleIcon sx={{ fontSize: { xs: 28, sm: 32 }, color: 'white' }} />}
+                    icon={<PeopleIcon sx={{ fontSize: { xs: 24, sm: 28 } }} />}
                     disabled={user?.rol !== 'ADMIN'}
                     stats={stats?.usuarios_activos}
+                    loading={loadingStats}
                     index={1}
                 />
             </Grid>
@@ -280,14 +323,18 @@ const DashboardPage = () => {
             {/* Info Section */}
             <Fade in={true} timeout={800}>
                 <Paper 
+                    elevation={0}
                     sx={{ 
                         mt: 4, 
                         p: { xs: 2, sm: 3 }, 
                         borderRadius: 2,
-                        backgroundColor: 'grey.50'
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        backgroundColor: (theme) => 
+                            theme.palette.mode === 'dark' ? alpha(theme.palette.background.paper, 0.6) : alpha(theme.palette.grey[50], 1),
                     }}
                 >
-                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom sx={{ fontWeight: 600 }}>
                         Sistema de Bitácora de Mantenimiento
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
@@ -297,7 +344,7 @@ const DashboardPage = () => {
                     </Typography>
                 </Paper>
             </Fade>
-        </Container>
+        </Box>
     );
 };
 
