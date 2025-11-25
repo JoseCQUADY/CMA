@@ -154,6 +154,23 @@ export const ThemeContextProvider = ({ children }) => {
                 shape: {
                     borderRadius: 8,
                 },
+                transitions: {
+                    duration: {
+                        shortest: 150,
+                        shorter: 200,
+                        short: 250,
+                        standard: 300,
+                        complex: 375,
+                        enteringScreen: 225,
+                        leavingScreen: 195,
+                    },
+                    easing: {
+                        easeInOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
+                        easeOut: 'cubic-bezier(0.0, 0, 0.2, 1)',
+                        easeIn: 'cubic-bezier(0.4, 0, 1, 1)',
+                        sharp: 'cubic-bezier(0.4, 0, 0.6, 1)',
+                    },
+                },
                 components: {
                     MuiButton: {
                         styleOverrides: {
@@ -161,8 +178,10 @@ export const ThemeContextProvider = ({ children }) => {
                                 borderRadius: 8,
                                 padding: '8px 16px',
                                 boxShadow: 'none',
+                                transition: 'all 0.2s ease-in-out',
                                 '&:hover': {
                                     boxShadow: '0 2px 8px rgba(0, 96, 160, 0.15)',
+                                    transform: 'translateY(-1px)',
                                 },
                             },
                             contained: {
@@ -176,6 +195,7 @@ export const ThemeContextProvider = ({ children }) => {
                         styleOverrides: {
                             root: {
                                 backgroundImage: 'none',
+                                transition: 'box-shadow 0.3s ease-in-out, transform 0.2s ease-in-out',
                             },
                             elevation1: {
                                 boxShadow: mode === 'light' 
@@ -194,6 +214,13 @@ export const ThemeContextProvider = ({ children }) => {
                             root: {
                                 borderRadius: 12,
                                 border: mode === 'light' ? '1px solid #e2e8f0' : '1px solid #334155',
+                                transition: 'transform 0.2s ease-in-out, box-shadow 0.3s ease-in-out',
+                                '&:hover': {
+                                    transform: 'translateY(-4px)',
+                                    boxShadow: mode === 'light'
+                                        ? '0 12px 24px rgba(0, 0, 0, 0.1)'
+                                        : '0 12px 24px rgba(0, 0, 0, 0.4)',
+                                },
                             },
                         },
                     },
@@ -226,10 +253,23 @@ export const ThemeContextProvider = ({ children }) => {
                     MuiTableRow: {
                         styleOverrides: {
                             root: {
+                                transition: 'background-color 0.15s ease-in-out',
                                 '&:hover': {
                                     backgroundColor: mode === 'light' ? '#f8fafc' : '#1e293b',
                                 },
                             },
+                        },
+                    },
+                    MuiSkeleton: {
+                        styleOverrides: {
+                            root: {
+                                backgroundColor: mode === 'light' ? '#e2e8f0' : '#334155',
+                            },
+                        },
+                    },
+                    MuiFade: {
+                        defaultProps: {
+                            timeout: 400,
                         },
                     },
                     MuiAppBar: {

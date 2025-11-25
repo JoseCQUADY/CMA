@@ -3,26 +3,22 @@ import { useNavigate } from 'react-router-dom';
 import { getAllEquipos, createEquipo, updateEquipo, deleteEquipo, deleteManual } from '../services/equipo.service.js';
 import EquipoForm from '../components/EquipoForm';
 import ConfirmationDialog from '../components/ConfirmationDialog';
+import TableSkeleton from '../components/TableSkeleton';
 import { 
     Container, Typography, Box, Paper, TableContainer, Table, TableHead,
-    TableRow, TableCell, TableBody, TablePagination, CircularProgress, Button, IconButton,
-    Backdrop, Tooltip, Fade, TextField, InputAdornment, useMediaQuery, Card, CardContent,
-    CardActions, Grid, Chip
+    TableRow, TableCell, TableBody, TablePagination, Button, IconButton,
+    Backdrop, Tooltip, Fade, TextField, InputAdornment, CircularProgress
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import InboxOutlinedIcon from '@mui/icons-material/InboxOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import PrintIcon from '@mui/icons-material/Print';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
 import toast from 'react-hot-toast';
 import React from 'react';
 
 const EquipoListPage = () => {
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [equipos, setEquipos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -193,90 +189,27 @@ const EquipoListPage = () => {
         </Box>
     );
 
-    // Mobile card view
-    const renderMobileCards = () => {
-        if (loading) return <Box sx={{ textAlign: 'center', py: 4 }}><CircularProgress /></Box>;
-        if (error) return <Typography color="error" align="center">{error}</Typography>;
-        if (equipos.length === 0) return renderEmptyState();
-
-        return (
-            <Grid container spacing={2}>
-                {equipos.map((equipo, index) => (
-                    <Grid item xs={12} sm={6} key={equipo.id}>
-                        <Fade in={true} timeout={300 * (index + 1)}>
-                            <Card 
-                                elevation={2} 
-                                sx={{ 
-                                    height: '100%',
-                                    cursor: 'pointer',
-                                    transition: 'transform 0.2s, box-shadow 0.2s',
-                                    '&:hover': {
-                                        transform: 'translateY(-4px)',
-                                        boxShadow: 6,
-                                    }
-                                }}
-                                onClick={() => handleRowClick(equipo.id)}
-                            >
-                                <CardContent>
-                                    <Typography variant="h6" component="div" sx={{ fontWeight: 600, mb: 1 }}>
-                                        {equipo.nombre}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                                        {equipo.marca} - {equipo.modelo}
-                                    </Typography>
-                                    <Chip 
-                                        icon={<LocationOnIcon sx={{ fontSize: 16 }} />}
-                                        label={equipo.ubicacion}
-                                        size="small"
-                                        sx={{ mt: 1 }}
-                                    />
-                                    <Typography variant="caption" display="block" sx={{ mt: 1, color: 'text.secondary' }}>
-                                        S/N: {equipo.numeroSerie}
-                                    </Typography>
-                                </CardContent>
-                                <CardActions sx={{ justifyContent: 'flex-end', pt: 0 }}>
-                                    <Tooltip title="Editar">
-                                        <IconButton 
-                                            onClick={(e) => { e.stopPropagation(); handleOpenForm(equipo); }} 
-                                            color="secondary" 
-                                            disabled={isSubmitting}
-                                            size="small"
-                                        >
-                                            <EditIcon />
-                                        </IconButton>
-                                    </Tooltip>
-                                    <Tooltip title="Eliminar">
-                                        <IconButton 
-                                            onClick={(e) => { e.stopPropagation(); handleOpenConfirmDeleteEquipo(equipo.id); }} 
-                                            color="error" 
-                                            disabled={isSubmitting}
-                                            size="small"
-                                        >
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </Tooltip>
-                                </CardActions>
-                            </Card>
-                        </Fade>
-                    </Grid>
-                ))}
-            </Grid>
-        );
-    };
-
     const renderTableContent = () => {
-        if (loading) return <TableRow><TableCell colSpan={6} align="center" sx={{ py: 4 }}><CircularProgress /></TableCell></TableRow>;
+        if (loading) return <TableSkeleton rows={rowsPerPage} columns={6} />;
         if (error) return <TableRow><TableCell colSpan={6} align="center"><Typography color="error">{error}</Typography></TableCell></TableRow>;
         if (equipos.length === 0) return <TableRow><TableCell colSpan={6} align="center" sx={{ py: 10 }}>{renderEmptyState()}</TableCell></TableRow>;
 
         return equipos.map((equipo, index) => (
-            <Fade in={true} timeout={300 * (index + 1)} key={equipo.id}>
-                <TableRow hover>
-                    <TableCell onClick={() => handleRowClick(equipo.id)} sx={{ cursor: 'pointer', fontWeight: 500 }}>{equipo.nombre}</TableCell>
-                    <TableCell onClick={() => handleRowClick(equipo.id)} sx={{ cursor: 'pointer' }}>{equipo.marca}</TableCell>
-                    <TableCell onClick={() => handleRowClick(equipo.id)} sx={{ cursor: 'pointer' }}>{equipo.modelo}</TableCell>
-                    <TableCell onClick={() => handleRowClick(equipo.id)} sx={{ cursor: 'pointer' }}>{equipo.numeroSerie}</TableCell>
-                    <TableCell onClick={() => handleRowClick(equipo.id)} sx={{ cursor: 'pointer' }}>{equipo.ubicacion}</TableCell>
+            <Fade in={true} timeout={150 + (index * 50)} key={equipo.id}>
+                <TableRow 
+                    hover 
+                    sx={{ 
+                        cursor: 'pointer',
+                        '&:hover': {
+                            backgroundColor: 'action.hover',
+                        }
+                    }}
+                >
+                    <TableCell onClick={() => handleRowClick(equipo.id)} sx={{ fontWeight: 500 }}>{equipo.nombre}</TableCell>
+                    <TableCell onClick={() => handleRowClick(equipo.id)}>{equipo.marca}</TableCell>
+                    <TableCell onClick={() => handleRowClick(equipo.id)}>{equipo.modelo}</TableCell>
+                    <TableCell onClick={() => handleRowClick(equipo.id)}>{equipo.numeroSerie}</TableCell>
+                    <TableCell onClick={() => handleRowClick(equipo.id)}>{equipo.ubicacion}</TableCell>
                     <TableCell align="right" onClick={(e) => e.stopPropagation()} className="no-print">
                         <Tooltip title="Editar"><IconButton onClick={(e) => { e.stopPropagation(); handleOpenForm(equipo); }} color="secondary" disabled={isSubmitting}><EditIcon /></IconButton></Tooltip>
                         <Tooltip title="Eliminar"><IconButton onClick={(e) => { e.stopPropagation(); handleOpenConfirmDeleteEquipo(equipo.id); }} color="error" disabled={isSubmitting}><DeleteIcon /></IconButton></Tooltip>
@@ -372,35 +305,26 @@ const EquipoListPage = () => {
                 </Typography>
             </Box>
 
-            {/* Content - Cards for mobile, Table for desktop */}
-            {isMobile ? (
-                <Box>
-                    {renderMobileCards()}
-                    <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-                        <TablePagination
-                            component="div"
-                            rowsPerPageOptions={[5, 10, 25]}
-                            count={totalEquipos}
-                            rowsPerPage={rowsPerPage}
-                            page={page}
-                            onPageChange={handleChangePage}
-                            onRowsPerPageChange={handleChangeRowsPerPage}
-                            labelRowsPerPage="Por página:"
-                        />
-                    </Box>
-                </Box>
-            ) : (
-                <Paper sx={{ width: '100%', overflow: 'hidden', position: 'relative' }}>
-                    <TableContainer>
-                        <Table>
+            {/* Table with horizontal scroll for all screen sizes */}
+            <Fade in={true} timeout={300}>
+                <Paper 
+                    sx={{ 
+                        width: '100%', 
+                        overflow: 'hidden', 
+                        position: 'relative',
+                        transition: 'box-shadow 0.3s ease-in-out',
+                    }}
+                >
+                    <TableContainer sx={{ maxHeight: { xs: 400, sm: 500, md: 'none' } }}>
+                        <Table stickyHeader size="medium">
                             <TableHead>
-                                <TableRow sx={{ '& .MuiTableCell-root': { backgroundColor: 'grey.100', fontWeight: 'bold' } }}>
-                                    <TableCell sx={{ minWidth: 200 }}>Nombre</TableCell>
-                                    <TableCell sx={{ minWidth: 150 }}>Marca</TableCell>
-                                    <TableCell sx={{ minWidth: 150 }}>Modelo</TableCell>
-                                    <TableCell sx={{ minWidth: 150 }}>N/S</TableCell>
-                                    <TableCell sx={{ minWidth: 170 }}>Ubicación</TableCell>
-                                    <TableCell sx={{ minWidth: 120 }} align="right" className="no-print">Acciones</TableCell>
+                                <TableRow>
+                                    <TableCell sx={{ minWidth: 150, fontWeight: 'bold' }}>Nombre</TableCell>
+                                    <TableCell sx={{ minWidth: 120, fontWeight: 'bold' }}>Marca</TableCell>
+                                    <TableCell sx={{ minWidth: 120, fontWeight: 'bold' }}>Modelo</TableCell>
+                                    <TableCell sx={{ minWidth: 130, fontWeight: 'bold' }}>N/S</TableCell>
+                                    <TableCell sx={{ minWidth: 140, fontWeight: 'bold' }}>Ubicación</TableCell>
+                                    <TableCell sx={{ minWidth: 100, fontWeight: 'bold' }} align="right" className="no-print">Acciones</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -409,13 +333,23 @@ const EquipoListPage = () => {
                         </Table>
                     </TableContainer>
                     <TablePagination
-                        rowsPerPageOptions={[5, 10, 25]} component="div" count={totalEquipos}
-                        rowsPerPage={rowsPerPage} page={page} onPageChange={handleChangePage}
-                        onRowsPerPageChange={handleChangeRowsPerPage} labelRowsPerPage="Filas por página:"
+                        rowsPerPageOptions={[5, 10, 25]} 
+                        component="div" 
+                        count={totalEquipos}
+                        rowsPerPage={rowsPerPage} 
+                        page={page} 
+                        onPageChange={handleChangePage}
+                        onRowsPerPageChange={handleChangeRowsPerPage} 
+                        labelRowsPerPage="Por pág:"
                         className="no-print"
+                        sx={{
+                            '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
+                                fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                            }
+                        }}
                     />
                 </Paper>
-            )}
+            </Fade>
 
             {formOpen && (
                 <EquipoForm

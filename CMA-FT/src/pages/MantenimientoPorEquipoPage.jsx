@@ -4,29 +4,25 @@ import { getEquipoById, getMantenimientosByEquipoId } from '../services/equipo.s
 import { createMantenimiento, updateMantenimiento, deleteMantenimiento, deleteEvidencia } from '../services/mantenimiento.service.js';
 import MantenimientoForm from '../components/MantenimientoForm';
 import ConfirmationDialog from '../components/ConfirmationDialog';
+import TableSkeleton from '../components/TableSkeleton';
 import { 
     Container, Typography, Box, Paper, TableContainer, Table, TableHead,
-    TableRow, TableCell, TableBody, CircularProgress, Button, IconButton,
+    TableRow, TableCell, TableBody, Button, IconButton,
     TablePagination, Backdrop, Tooltip, Fade, TextField, InputAdornment,
-    useMediaQuery, Card, CardContent, CardActions, Grid, Chip, Breadcrumbs, Link
+    Chip, Breadcrumbs, Link, CircularProgress
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import InboxOutlinedIcon from '@mui/icons-material/InboxOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import PrintIcon from '@mui/icons-material/Print';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import PersonIcon from '@mui/icons-material/Person';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import HomeIcon from '@mui/icons-material/Home';
 import toast from 'react-hot-toast';
 import React from 'react';
 
 const MantenimientoPorEquipoPage = () => {
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const { id: equipoId } = useParams();
     const navigate = useNavigate();
     const [equipo, setEquipo] = useState(null);
@@ -220,98 +216,23 @@ const MantenimientoPorEquipoPage = () => {
         </Box>
     );
 
-    // Mobile card view
-    const renderMobileCards = () => {
-        if (loading) return <Box sx={{ textAlign: 'center', py: 4 }}><CircularProgress /></Box>;
-        if (error) return <Typography color="error" align="center">{error}</Typography>;
-        if (filteredMantenimientos.length === 0) return renderEmptyState();
-
-        return (
-            <Grid container spacing={2}>
-                {filteredMantenimientos.map((mantenimiento, index) => (
-                    <Grid item xs={12} key={mantenimiento.id}>
-                        <Fade in={true} timeout={300 * (index + 1)}>
-                            <Card 
-                                elevation={2} 
-                                sx={{ 
-                                    cursor: 'pointer',
-                                    transition: 'transform 0.2s, box-shadow 0.2s',
-                                    '&:hover': {
-                                        transform: 'translateY(-4px)',
-                                        boxShadow: 6,
-                                    }
-                                }}
-                                onClick={() => navigate(`/mantenimiento/${mantenimiento.id}`)}
-                            >
-                                <CardContent>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                                        <Chip 
-                                            label={mantenimiento.tipoMantenimiento} 
-                                            color={getTypeColor(mantenimiento.tipoMantenimiento)}
-                                            size="small"
-                                        />
-                                        <Typography variant="caption" color="text.secondary">
-                                            {new Date(mantenimiento.fecha).toLocaleDateString()}
-                                        </Typography>
-                                    </Box>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2, mb: 1 }}>
-                                        <PersonIcon fontSize="small" color="action" />
-                                        <Typography variant="body2">
-                                            {mantenimiento.tecnico?.nombre || 'N/A'}
-                                        </Typography>
-                                    </Box>
-                                    <Typography 
-                                        variant="body2" 
-                                        color="text.secondary"
-                                        sx={{ 
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis',
-                                            display: '-webkit-box',
-                                            WebkitLineClamp: 2,
-                                            WebkitBoxOrient: 'vertical',
-                                        }}
-                                    >
-                                        {mantenimiento.observaciones}
-                                    </Typography>
-                                </CardContent>
-                                <CardActions sx={{ justifyContent: 'flex-end', pt: 0 }} onClick={(e) => e.stopPropagation()}>
-                                    <Tooltip title="Editar">
-                                        <IconButton 
-                                            onClick={(e) => { e.stopPropagation(); handleOpenForm(mantenimiento); }} 
-                                            color="secondary" 
-                                            disabled={isSubmitting}
-                                            size="small"
-                                        >
-                                            <EditIcon />
-                                        </IconButton>
-                                    </Tooltip>
-                                    <Tooltip title="Eliminar">
-                                        <IconButton 
-                                            onClick={(e) => { e.stopPropagation(); handleOpenConfirmDeleteManto(mantenimiento.id); }} 
-                                            color="error" 
-                                            disabled={isSubmitting}
-                                            size="small"
-                                        >
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </Tooltip>
-                                </CardActions>
-                            </Card>
-                        </Fade>
-                    </Grid>
-                ))}
-            </Grid>
-        );
-    };
-
     const renderTableContent = () => {
-        if (loading) return <TableRow><TableCell colSpan={5} align="center" sx={{ py: 4 }}><CircularProgress /></TableCell></TableRow>;
+        if (loading) return <TableSkeleton rows={rowsPerPage} columns={5} />;
         if (error) return <TableRow><TableCell colSpan={5} align="center"><Typography color="error">{error}</Typography></TableCell></TableRow>;
         if (filteredMantenimientos.length === 0) return <TableRow><TableCell colSpan={5} align="center" sx={{ py: 10 }}>{renderEmptyState()}</TableCell></TableRow>;
 
         return filteredMantenimientos.map((mantenimiento, index) => (
-            <Fade in={true} timeout={300 * (index + 1)} key={mantenimiento.id}>
-                <TableRow hover onClick={() => navigate(`/mantenimiento/${mantenimiento.id}`)} sx={{ cursor: 'pointer' }}>
+            <Fade in={true} timeout={150 + (index * 50)} key={mantenimiento.id}>
+                <TableRow 
+                    hover 
+                    onClick={() => navigate(`/mantenimiento/${mantenimiento.id}`)} 
+                    sx={{ 
+                        cursor: 'pointer',
+                        '&:hover': {
+                            backgroundColor: 'action.hover',
+                        }
+                    }}
+                >
                     <TableCell>
                         <Chip 
                             label={mantenimiento.tipoMantenimiento} 
@@ -438,34 +359,24 @@ const MantenimientoPorEquipoPage = () => {
                 </Typography>
             </Box>
 
-            {/* Content */}
-            {isMobile ? (
-                <Box>
-                    {renderMobileCards()}
-                    <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-                        <TablePagination
-                            component="div"
-                            rowsPerPageOptions={[5, 10, 25]}
-                            count={total}
-                            rowsPerPage={rowsPerPage}
-                            page={page}
-                            onPageChange={handleChangePage}
-                            onRowsPerPageChange={handleChangeRowsPerPage}
-                            labelRowsPerPage="Por página:"
-                        />
-                    </Box>
-                </Box>
-            ) : (
-                <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-                    <TableContainer>
-                        <Table>
+            {/* Table with horizontal scroll for all screen sizes */}
+            <Fade in={true} timeout={300}>
+                <Paper 
+                    sx={{ 
+                        width: '100%', 
+                        overflow: 'hidden',
+                        transition: 'box-shadow 0.3s ease-in-out',
+                    }}
+                >
+                    <TableContainer sx={{ maxHeight: { xs: 400, sm: 500, md: 'none' } }}>
+                        <Table stickyHeader size="medium">
                             <TableHead>
-                                 <TableRow sx={{ '& .MuiTableCell-root': { backgroundColor: 'grey.100', fontWeight: 'bold' } }}>
-                                    <TableCell sx={{ minWidth: 150 }}>Tipo</TableCell>
-                                    <TableCell sx={{ minWidth: 200 }}>Fecha</TableCell>
-                                    <TableCell sx={{ minWidth: 170 }}>Técnico</TableCell>
-                                    <TableCell sx={{ minWidth: 300 }}>Observaciones</TableCell>
-                                    <TableCell sx={{ minWidth: 120 }} align="right" className="no-print">Acciones</TableCell>
+                                <TableRow>
+                                    <TableCell sx={{ minWidth: 130, fontWeight: 'bold' }}>Tipo</TableCell>
+                                    <TableCell sx={{ minWidth: 160, fontWeight: 'bold' }}>Fecha</TableCell>
+                                    <TableCell sx={{ minWidth: 140, fontWeight: 'bold' }}>Técnico</TableCell>
+                                    <TableCell sx={{ minWidth: 200, fontWeight: 'bold' }}>Observaciones</TableCell>
+                                    <TableCell sx={{ minWidth: 100, fontWeight: 'bold' }} align="right" className="no-print">Acciones</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -474,13 +385,23 @@ const MantenimientoPorEquipoPage = () => {
                         </Table>
                     </TableContainer>
                     <TablePagination
-                        rowsPerPageOptions={[5, 10, 25]} component="div" count={total}
-                        rowsPerPage={rowsPerPage} page={page} onPageChange={handleChangePage}
-                        onRowsPerPageChange={handleChangeRowsPerPage} labelRowsPerPage="Filas por página:"
+                        rowsPerPageOptions={[5, 10, 25]} 
+                        component="div" 
+                        count={total}
+                        rowsPerPage={rowsPerPage} 
+                        page={page} 
+                        onPageChange={handleChangePage}
+                        onRowsPerPageChange={handleChangeRowsPerPage} 
+                        labelRowsPerPage="Por pág:"
                         className="no-print"
+                        sx={{
+                            '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
+                                fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                            }
+                        }}
                     />
                 </Paper>
-            )}
+            </Fade>
 
             {formOpen && (
                 <MantenimientoForm 

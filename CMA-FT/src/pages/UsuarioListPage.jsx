@@ -2,27 +2,24 @@ import { useState, useEffect, useCallback } from 'react';
 import { getAllUsers, createUser, updateUser, deleteUser } from '../services/usuario.service.js';
 import UsuarioForm from '../components/UsuarioForm';
 import ConfirmationDialog from '../components/ConfirmationDialog';
+import TableSkeleton from '../components/TableSkeleton';
 import { 
     Container, Typography, Box, Paper, TableContainer, Table, TableHead,
-    TableRow, TableCell, TableBody, CircularProgress, Button, IconButton,
+    TableRow, TableCell, TableBody, Button, IconButton,
     TablePagination, Chip, Backdrop, Tooltip, Fade, TextField, InputAdornment,
-    useMediaQuery, Card, CardContent, CardActions, Grid, Avatar
+    Avatar, CircularProgress
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import InboxOutlinedIcon from '@mui/icons-material/InboxOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import PrintIcon from '@mui/icons-material/Print';
-import PersonIcon from '@mui/icons-material/Person';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import toast from 'react-hot-toast';
 import React from 'react';
 
 const UsuarioListPage = () => {
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [usuarios, setUsuarios] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -152,92 +149,13 @@ const UsuarioListPage = () => {
         </Box>
     );
 
-    // Mobile card view
-    const renderMobileCards = () => {
-        if (loading) return <Box sx={{ textAlign: 'center', py: 4 }}><CircularProgress /></Box>;
-        if (error) return <Typography color="error" align="center">{error}</Typography>;
-        if (usuarios.length === 0) return renderEmptyState();
-
-        return (
-            <Grid container spacing={2}>
-                {usuarios.map((usuario, index) => (
-                    <Grid item xs={12} sm={6} key={usuario.id}>
-                        <Fade in={true} timeout={300 * (index + 1)}>
-                            <Card 
-                                elevation={2} 
-                                sx={{ 
-                                    height: '100%',
-                                    transition: 'transform 0.2s, box-shadow 0.2s',
-                                    '&:hover': {
-                                        transform: 'translateY(-4px)',
-                                        boxShadow: 6,
-                                    }
-                                }}
-                            >
-                                <CardContent>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                        <Avatar sx={{ bgcolor: usuario.rol === 'ADMIN' ? 'secondary.main' : 'primary.main', mr: 2 }}>
-                                            {usuario.rol === 'ADMIN' ? <AdminPanelSettingsIcon /> : getInitials(usuario.nombre)}
-                                        </Avatar>
-                                        <Box>
-                                            <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
-                                                {usuario.nombre}
-                                            </Typography>
-                                            <Typography variant="body2" color="text.secondary">
-                                                {usuario.email}
-                                            </Typography>
-                                        </Box>
-                                    </Box>
-                                    <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                                        <Chip 
-                                            label={usuario.rol} 
-                                            color={usuario.rol === 'ADMIN' ? 'secondary' : 'default'}
-                                            size="small"
-                                        />
-                                        <Chip 
-                                            label={usuario.estado} 
-                                            color={usuario.estado === 'ACTIVO' ? 'success' : 'default'} 
-                                            size="small"
-                                        />
-                                    </Box>
-                                </CardContent>
-                                <CardActions sx={{ justifyContent: 'flex-end', pt: 0 }}>
-                                    <Tooltip title="Editar">
-                                        <IconButton 
-                                            onClick={() => handleOpenForm(usuario)} 
-                                            color="secondary" 
-                                            disabled={isSubmitting}
-                                            size="small"
-                                        >
-                                            <EditIcon />
-                                        </IconButton>
-                                    </Tooltip>
-                                    <Tooltip title="Desactivar">
-                                        <IconButton 
-                                            onClick={() => handleOpenConfirm(usuario.id)} 
-                                            color="error" 
-                                            disabled={isSubmitting}
-                                            size="small"
-                                        >
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </Tooltip>
-                                </CardActions>
-                            </Card>
-                        </Fade>
-                    </Grid>
-                ))}
-            </Grid>
-        );
-    };
-
     const renderTableContent = () => {
-        if (loading) return <TableRow><TableCell colSpan={5} align="center" sx={{ py: 4 }}><CircularProgress /></TableCell></TableRow>;
+        if (loading) return <TableSkeleton rows={rowsPerPage} columns={5} />;
         if (error) return <TableRow><TableCell colSpan={5} align="center"><Typography color="error">{error}</Typography></TableCell></TableRow>;
         if (usuarios.length === 0) return <TableRow><TableCell colSpan={5} align="center" sx={{ py: 10 }}>{renderEmptyState()}</TableCell></TableRow>;
 
         return usuarios.map((usuario, index) => (
-            <Fade in={true} timeout={300 * (index + 1)} key={usuario.id}>
+            <Fade in={true} timeout={150 + (index * 50)} key={usuario.id}>
                 <TableRow hover>
                     <TableCell sx={{ fontWeight: 500 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -351,34 +269,24 @@ const UsuarioListPage = () => {
                 </Typography>
             </Box>
 
-            {/* Content - Cards for mobile, Table for desktop */}
-            {isMobile ? (
-                <Box>
-                    {renderMobileCards()}
-                    <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-                        <TablePagination
-                            component="div"
-                            rowsPerPageOptions={[5, 10, 25]}
-                            count={totalUsers}
-                            rowsPerPage={rowsPerPage}
-                            page={page}
-                            onPageChange={handleChangePage}
-                            onRowsPerPageChange={handleChangeRowsPerPage}
-                            labelRowsPerPage="Por página:"
-                        />
-                    </Box>
-                </Box>
-            ) : (
-                <Paper>
-                    <TableContainer>
-                        <Table>
+            {/* Table with horizontal scroll for all screen sizes */}
+            <Fade in={true} timeout={300}>
+                <Paper 
+                    sx={{ 
+                        width: '100%', 
+                        overflow: 'hidden',
+                        transition: 'box-shadow 0.3s ease-in-out',
+                    }}
+                >
+                    <TableContainer sx={{ maxHeight: { xs: 400, sm: 500, md: 'none' } }}>
+                        <Table stickyHeader size="medium">
                             <TableHead>
-                                <TableRow sx={{ '& .MuiTableCell-root': { backgroundColor: 'grey.100', fontWeight: 'bold' } }}>
-                                    <TableCell sx={{ minWidth: 200 }}>Nombre</TableCell>
-                                    <TableCell sx={{ minWidth: 200 }}>Email</TableCell>
-                                    <TableCell sx={{ minWidth: 120 }}>Rol</TableCell>
-                                    <TableCell sx={{ minWidth: 100 }}>Estado</TableCell>
-                                    <TableCell sx={{ minWidth: 120 }} align="right" className="no-print">Acciones</TableCell>
+                                <TableRow>
+                                    <TableCell sx={{ minWidth: 180, fontWeight: 'bold' }}>Nombre</TableCell>
+                                    <TableCell sx={{ minWidth: 180, fontWeight: 'bold' }}>Email</TableCell>
+                                    <TableCell sx={{ minWidth: 100, fontWeight: 'bold' }}>Rol</TableCell>
+                                    <TableCell sx={{ minWidth: 90, fontWeight: 'bold' }}>Estado</TableCell>
+                                    <TableCell sx={{ minWidth: 100, fontWeight: 'bold' }} align="right" className="no-print">Acciones</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>{renderTableContent()}</TableBody>
@@ -392,11 +300,16 @@ const UsuarioListPage = () => {
                         page={page}
                         onPageChange={handleChangePage}
                         onRowsPerPageChange={handleChangeRowsPerPage}
-                        labelRowsPerPage="Filas por página:"
+                        labelRowsPerPage="Por pág:"
                         className="no-print"
+                        sx={{
+                            '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
+                                fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                            }
+                        }}
                     />
                 </Paper>
-            )}
+            </Fade>
 
             {formOpen && (
                 <UsuarioForm open={formOpen} onClose={handleCloseForm} onSave={handleSaveUser} usuario={userToEdit} isSubmitting={isSubmitting} />
