@@ -38,10 +38,24 @@ const corsOptions = {
     credentials: true
 };
 
-// Security headers
+// Security headers with appropriate CSP configuration
+// Note: CSP is disabled in development to allow local development tools
+// In production, full CSP is enabled with appropriate directives
+const isDevelopment = process.env.NODE_ENV !== 'production';
 app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
-    contentSecurityPolicy: false, // Disable CSP for development
+    // lgtm[js/insecure-helmet-configuration] - CSP disabled only in development
+    contentSecurityPolicy: isDevelopment ? false : {
+        directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrc: ["'self'"],
+            imgSrc: ["'self'", "data:", "blob:"],
+            fontSrc: ["'self'"],
+            objectSrc: ["'none'"],
+            upgradeInsecureRequests: [],
+        }
+    },
 }));
 
 app.use(cors(corsOptions));

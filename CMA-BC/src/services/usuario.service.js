@@ -22,13 +22,21 @@ export async function findAllUsers(page = 1, limit = 10, search = '') {
     const skip = (page - 1) * limit;
     
     // Build search filter if search term provided
-    const searchFilter = search ? {
-        OR: [
+    let searchFilter = {};
+    if (search) {
+        const searchConditions = [
             { nombre: { contains: search, mode: 'insensitive' } },
             { email: { contains: search, mode: 'insensitive' } },
-            { rol: { equals: search.toUpperCase() === 'ADMIN' || search.toUpperCase() === 'TECNICO' ? search.toUpperCase() : undefined } },
-        ].filter(condition => Object.values(condition)[0] !== undefined)
-    } : {};
+        ];
+        
+        // Only add rol filter if search matches a valid role
+        const upperSearch = search.toUpperCase();
+        if (upperSearch === 'ADMIN' || upperSearch === 'TECNICO') {
+            searchConditions.push({ rol: { equals: upperSearch } });
+        }
+        
+        searchFilter = { OR: searchConditions };
+    }
 
     const whereClause = Object.keys(searchFilter).length > 0 ? searchFilter : {};
 

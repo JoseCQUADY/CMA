@@ -136,15 +136,6 @@ const UsuarioListPage = () => {
         }
     };
 
-    // Filter users based on search
-    const filteredUsuarios = debouncedSearch 
-        ? usuarios.filter(u => 
-            u.nombre.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-            u.email.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-            u.rol.toLowerCase().includes(debouncedSearch.toLowerCase())
-          )
-        : usuarios;
-
     const getInitials = (name = '') => name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
     const renderEmptyState = () => (
@@ -165,11 +156,11 @@ const UsuarioListPage = () => {
     const renderMobileCards = () => {
         if (loading) return <Box sx={{ textAlign: 'center', py: 4 }}><CircularProgress /></Box>;
         if (error) return <Typography color="error" align="center">{error}</Typography>;
-        if (filteredUsuarios.length === 0) return renderEmptyState();
+        if (usuarios.length === 0) return renderEmptyState();
 
         return (
             <Grid container spacing={2}>
-                {filteredUsuarios.map((usuario, index) => (
+                {usuarios.map((usuario, index) => (
                     <Grid item xs={12} sm={6} key={usuario.id}>
                         <Fade in={true} timeout={300 * (index + 1)}>
                             <Card 
@@ -243,9 +234,9 @@ const UsuarioListPage = () => {
     const renderTableContent = () => {
         if (loading) return <TableRow><TableCell colSpan={5} align="center" sx={{ py: 4 }}><CircularProgress /></TableCell></TableRow>;
         if (error) return <TableRow><TableCell colSpan={5} align="center"><Typography color="error">{error}</Typography></TableCell></TableRow>;
-        if (filteredUsuarios.length === 0) return <TableRow><TableCell colSpan={5} align="center" sx={{ py: 10 }}>{renderEmptyState()}</TableCell></TableRow>;
+        if (usuarios.length === 0) return <TableRow><TableCell colSpan={5} align="center" sx={{ py: 10 }}>{renderEmptyState()}</TableCell></TableRow>;
 
-        return filteredUsuarios.map((usuario, index) => (
+        return usuarios.map((usuario, index) => (
             <Fade in={true} timeout={300 * (index + 1)} key={usuario.id}>
                 <TableRow hover>
                     <TableCell sx={{ fontWeight: 500 }}>
@@ -339,7 +330,7 @@ const UsuarioListPage = () => {
                 />
                 {debouncedSearch && (
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                        Mostrando {filteredUsuarios.length} resultado(s) para "{debouncedSearch}"
+                        Mostrando {totalUsers} resultado(s) para "{debouncedSearch}"
                     </Typography>
                 )}
             </Paper>
