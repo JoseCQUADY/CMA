@@ -392,7 +392,7 @@ const MantenimientoPorEquipoPage = () => {
                         page={page} 
                         onPageChange={handleChangePage}
                         onRowsPerPageChange={handleChangeRowsPerPage} 
-                        labelRowsPerPage="Filas:"
+                        labelRowsPerPage="Por pág:"
                         className="no-print"
                         sx={{
                             '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
