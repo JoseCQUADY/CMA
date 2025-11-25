@@ -66,3 +66,232 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* ==========================================
+   RESPONSIVE DESIGN - Mobile First Approach
+   ========================================== */
+
+/* Extra small devices (phones, less than 576px) */
+@media (max-width: 575.98px) {
+  .MuiContainer-root {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+  
+  .MuiTypography-h4 {
+    font-size: 1.5rem !important;
+  }
+  
+  .MuiTypography-h5 {
+    font-size: 1.25rem !important;
+  }
+  
+  .MuiDialog-paper {
+    margin: 16px !important;
+    width: calc(100% - 32px) !important;
+    max-width: none !important;
+  }
+  
+  .MuiTableCell-root {
+    padding: 8px !important;
+    font-size: 0.875rem !important;
+  }
+}
+
+/* Small devices (landscape phones, 576px to 767px) */
+@media (min-width: 576px) and (max-width: 767.98px) {
+  .MuiContainer-root {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+}
+
+/* Medium devices (tablets, 768px to 991px) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .MuiContainer-root {
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+  }
+}
+
+/* Large devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+  .MuiContainer-root {
+    max-width: 1200px !important;
+  }
+}
+
+/* ==========================================
+   PRINT STYLES - Media Query Print
+   ========================================== */
+
+@media print {
+  /* Hide non-essential elements during print */
+  .no-print,
+  .MuiAppBar-root,
+  .MuiDrawer-root,
+  .MuiBackdrop-root,
+  .MuiDialog-root,
+  .MuiTooltip-popper,
+  .MuiTablePagination-root,
+  nav,
+  header,
+  footer,
+  button:not(.print-include),
+  .MuiIconButton-root,
+  .MuiButton-root:not(.print-include),
+  .MuiFab-root {
+    display: none !important;
+  }
+
+  /* Show print-only elements */
+  .print-only {
+    display: block !important;
+  }
+
+  /* Reset body styles for print */
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    font-size: 12pt !important;
+    line-height: 1.4 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Container styles for print */
+  .print-container,
+  .MuiContainer-root {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Paper styles for print */
+  .MuiPaper-root {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+    margin-bottom: 16px !important;
+  }
+
+  /* Table styles for print */
+  .MuiTable-root {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  .MuiTableHead-root .MuiTableCell-root {
+    background-color: #f5f5f5 !important;
+    font-weight: bold !important;
+    border-bottom: 2px solid #333 !important;
+  }
+
+  .MuiTableCell-root {
+    border: 1px solid #ddd !important;
+    padding: 8px !important;
+    font-size: 10pt !important;
+  }
+
+  .MuiTableRow-root {
+    page-break-inside: avoid !important;
+  }
+
+  /* Typography for print */
+  .MuiTypography-h4 {
+    font-size: 18pt !important;
+    margin-bottom: 8pt !important;
+  }
+
+  .MuiTypography-h5 {
+    font-size: 14pt !important;
+  }
+
+  .MuiTypography-body1,
+  .MuiTypography-body2 {
+    font-size: 10pt !important;
+  }
+
+  /* Card styles for print */
+  .MuiCard-root {
+    page-break-inside: avoid !important;
+    margin-bottom: 12pt !important;
+    border: 1px solid #ccc !important;
+  }
+
+  /* Grid layout for print */
+  .MuiGrid-container {
+    display: block !important;
+  }
+
+  .MuiGrid-item {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-bottom: 8pt !important;
+  }
+
+  /* Page setup */
+  @page {
+    size: A4;
+    margin: 1.5cm;
+  }
+
+  /* First page header */
+  @page:first {
+    margin-top: 2cm;
+  }
+
+  /* Avoid breaking inside important elements */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  img, table, figure {
+    page-break-inside: avoid !important;
+  }
+
+  /* Ensure links show their URLs in print */
+  a[href^="http"]:after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    color: #666;
+  }
+
+  /* Hide action columns in tables */
+  .MuiTableCell-root:last-child {
+    display: none !important;
+  }
+}
+
+/* ==========================================
+   ACCESSIBILITY IMPROVEMENTS
+   ========================================== */
+
+/* Focus visible styles for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid #646cff !important;
+  outline-offset: 2px !important;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .MuiButton-contained {
+    border: 2px solid currentColor !important;
+  }
+  
+  .MuiTableCell-root {
+    border: 1px solid #000 !important;
+  }
+}

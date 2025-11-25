@@ -1,7 +1,9 @@
 import axiosInstance from '../utils/axiosInstance';
 
-export const getAllEquipos = async (page = 1, limit = 10) => {
-    const response = await axiosInstance.get(`/equipos?page=${page}&limit=${limit}`);
+export const getAllEquipos = async (page = 1, limit = 10, search = '') => {
+    const params = new URLSearchParams({ page, limit });
+    if (search) params.append('search', search);
+    const response = await axiosInstance.get(`/equipos?${params.toString()}`);
     return response.data;
 };
 

@@ -82,18 +82,36 @@ export async function findEquipoById(id) {
     return equipo;
 }
 
-export async function findAllEquipos(page = 1, limit = 10) {
+export async function findAllEquipos(page = 1, limit = 10, search = '') {
     const skip = (page - 1) * limit;
+    
+    // Build search filter if search term provided
+    const searchFilter = search ? {
+        OR: [
+            { nombre: { contains: search, mode: 'insensitive' } },
+            { marca: { contains: search, mode: 'insensitive' } },
+            { modelo: { contains: search, mode: 'insensitive' } },
+            { numeroSerie: { contains: search, mode: 'insensitive' } },
+            { idControl: { contains: search, mode: 'insensitive' } },
+            { ubicacion: { contains: search, mode: 'insensitive' } },
+        ]
+    } : {};
+
+    const whereClause = {
+        estado: 'ACTIVO',
+        ...searchFilter
+    };
+
     const [equipos, total] = await prisma.$transaction([
         prisma.equipo.findMany({
-            where: { estado: 'ACTIVO' },
+            where: whereClause,
             skip,
             take: limit,
             orderBy: { createdAt: 'desc' }
         }),
-        prisma.equipo.count({ where: { estado: 'ACTIVO' } })
+        prisma.equipo.count({ where: whereClause })
     ]);
-    return { data: equipos, total, page, totalPages: Math.ceil(total / limit) };
+    return { data: equipos, total, page, totalPages: Math.ceil(total / limit), search };
 }
 
 export async function softDeleteEquipoById(id) {

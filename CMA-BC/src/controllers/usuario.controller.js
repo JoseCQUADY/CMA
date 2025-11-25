@@ -14,7 +14,8 @@ export async function getAllUsers(req, res, next) {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
-        const result = await usuarioService.findAllUsers(page, limit);
+        const search = req.query.search || '';
+        const result = await usuarioService.findAllUsers(page, limit, search);
         res.json(result);
     } catch (error) {
         next(error);
