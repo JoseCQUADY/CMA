@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useThemeMode } from '../context/ThemeContext';
 import { useTheme } from '@mui/material/styles';
 import logo from '../assets/logo.svg';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -14,9 +15,12 @@ import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
 import DevicesIcon from '@mui/icons-material/Devices';
 import PeopleIcon from '@mui/icons-material/People';
+import LightModeIcon from '@mui/icons-material/LightMode';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
 
 const Navbar = () => {
     const { user, logout } = useAuth();
+    const { toggleTheme, isDarkMode } = useThemeMode();
     const navigate = useNavigate();
     const location = useLocation();
     const theme = useTheme();
@@ -106,6 +110,14 @@ const Navbar = () => {
                         ))}
                         <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.12)', my: 1 }} />
                         <ListItem disablePadding>
+                            <ListItemButton onClick={toggleTheme}>
+                                <ListItemIcon sx={{ color: 'white', minWidth: 40 }}>
+                                    {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
+                                </ListItemIcon>
+                                <ListItemText primary={isDarkMode ? 'Modo Claro' : 'Modo Oscuro'} />
+                            </ListItemButton>
+                        </ListItem>
+                        <ListItem disablePadding>
                             <ListItemButton onClick={handleLogout}>
                                 <ListItemIcon sx={{ color: 'white', minWidth: 40 }}><LogoutIcon /></ListItemIcon>
                                 <ListItemText primary="Cerrar Sesión" />
@@ -113,12 +125,22 @@ const Navbar = () => {
                         </ListItem>
                     </>
                 ) : (
-                    <ListItem disablePadding>
-                        <ListItemButton onClick={() => handleNavigate('/login')}>
-                            <ListItemIcon sx={{ color: 'white', minWidth: 40 }}><LoginIcon /></ListItemIcon>
-                            <ListItemText primary="Iniciar Sesión" />
-                        </ListItemButton>
-                    </ListItem>
+                    <>
+                        <ListItem disablePadding>
+                            <ListItemButton onClick={toggleTheme}>
+                                <ListItemIcon sx={{ color: 'white', minWidth: 40 }}>
+                                    {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
+                                </ListItemIcon>
+                                <ListItemText primary={isDarkMode ? 'Modo Claro' : 'Modo Oscuro'} />
+                            </ListItemButton>
+                        </ListItem>
+                        <ListItem disablePadding>
+                            <ListItemButton onClick={() => handleNavigate('/login')}>
+                                <ListItemIcon sx={{ color: 'white', minWidth: 40 }}><LoginIcon /></ListItemIcon>
+                                <ListItemText primary="Iniciar Sesión" />
+                            </ListItemButton>
+                        </ListItem>
+                    </>
                 )}
             </List>
         </Box>
@@ -177,6 +199,12 @@ const Navbar = () => {
                                         <Typography variant="body2" color="text.secondary" noWrap>{user.email}</Typography>
                                         <Typography variant="caption" color="text.secondary">{user.rol}</Typography>
                                     </Box>
+                                    <MenuItem onClick={toggleTheme}>
+                                        <ListItemIcon>
+                                            {isDarkMode ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
+                                        </ListItemIcon>
+                                        {isDarkMode ? 'Modo Claro' : 'Modo Oscuro'}
+                                    </MenuItem>
                                     <MenuItem onClick={handleLogout}>
                                         <ListItemIcon><LogoutIcon fontSize="small" /></ListItemIcon>
                                         Cerrar Sesión
@@ -184,21 +212,28 @@ const Navbar = () => {
                                 </Menu>
                             </>
                         ) : (
-                            <Button 
-                                color="inherit" 
-                                component={Link} 
-                                to="/login"
-                                startIcon={<LoginIcon />}
-                                sx={{
-                                    borderRadius: 2,
-                                    px: 2,
-                                    '&:hover': {
-                                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                    }
-                                }}
-                            >
-                                Iniciar Sesión
-                            </Button>
+                            <>
+                                <Tooltip title={isDarkMode ? 'Modo Claro' : 'Modo Oscuro'}>
+                                    <IconButton onClick={toggleTheme} sx={{ color: 'white', mr: 1 }}>
+                                        {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
+                                    </IconButton>
+                                </Tooltip>
+                                <Button 
+                                    color="inherit" 
+                                    component={Link} 
+                                    to="/login"
+                                    startIcon={<LoginIcon />}
+                                    sx={{
+                                        borderRadius: 2,
+                                        px: 2,
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                        }
+                                    }}
+                                >
+                                    Iniciar Sesión
+                                </Button>
+                            </>
                         )}
                     </Box>
 
