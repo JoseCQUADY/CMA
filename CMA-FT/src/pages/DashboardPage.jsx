@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Container, Grid, Paper, Typography, Avatar, Skeleton, useMediaQuery, Fade, Grow } from '@mui/material';
+import { Box, Paper, Typography, Avatar, Skeleton, useMediaQuery, Fade, Grow, Grid } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme, alpha } from '@mui/material/styles';
@@ -19,7 +19,7 @@ const DashboardCard = ({ title, description, link, icon, disabled = false, stats
     }
 
     return (
-        <Grid item xs={12} sm={6} md={4}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
             <Grow in={!loading} timeout={400 + (index * 100)}>
                 <Paper
                     component={Link}
@@ -247,7 +247,7 @@ const DashboardPage = () => {
                 </Box>
             </Fade>
             <Grid container spacing={2} sx={{ mb: 4 }}>
-                <Grid item xs={6} md={3}>
+                <Grid size={{ xs: 6, md: 3 }}>
                     <StatCard 
                         title="Equipos Activos" 
                         value={stats?.equipos_activos ?? '-'} 
@@ -257,7 +257,7 @@ const DashboardPage = () => {
                         index={0}
                     />
                 </Grid>
-                <Grid item xs={6} md={3}>
+                <Grid size={{ xs: 6, md: 3 }}>
                     <StatCard 
                         title="Usuarios Activos" 
                         value={stats?.usuarios_activos ?? '-'} 
@@ -267,7 +267,7 @@ const DashboardPage = () => {
                         index={1}
                     />
                 </Grid>
-                <Grid item xs={6} md={3}>
+                <Grid size={{ xs: 6, md: 3 }}>
                     <StatCard 
                         title="Mantenimientos (Mes)" 
                         value={stats?.mantenimientos_mes ?? '-'} 
@@ -277,7 +277,7 @@ const DashboardPage = () => {
                         index={2}
                     />
                 </Grid>
-                <Grid item xs={6} md={3}>
+                <Grid size={{ xs: 6, md: 3 }}>
                     <StatCard 
                         title="Total Mantenimientos" 
                         value={stats?.total_mantenimientos ?? '-'} 
